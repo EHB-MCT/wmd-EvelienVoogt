@@ -22,7 +22,19 @@ async function postEvent(req, res) {
 	const cleanType = type.trim().toLowerCase();
 	const cleanPath = path.trim();
 	const cleanSessionId = session_id.trim();
-    
+
+	let cleanDuration = null;
+
+	if (duration_ms !== undefined && duration_ms !== null && duration_ms !== "") {
+		const n = Number(duration_ms);
+
+		if (!Number.isFinite(n)) {
+			return res.status(400).json({ error: "duration_ms must be a number" });
+		}
+
+		cleanDuration = Math.max(0, Math.trunc(n));
+	}
+
 	try {
 		const [event] = await knex("events")
 			.insert({
@@ -31,7 +43,7 @@ async function postEvent(req, res) {
 				path: cleanPath,
 				element: element ?? null,
 				value: value ?? null,
-				duration_ms: duration_ms ?? null,
+				duration_ms: cleanDuration,
 				metadata: metadata ?? null,
 			})
 			.returning(["id", "user_id", "session_id", "type", "path", "element", "value", "duration_ms", "metadata", "created_at"]);
