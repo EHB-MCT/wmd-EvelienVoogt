@@ -3,8 +3,14 @@
 	"type": "commonjs",
 	"main": "src/index.js",
 	"scripts": {
-		"start": "node src/index.js"
+		"start": "node src/index.js",
+		"migrate:make": "npx knex migrate:make",
+		"migrate:latest": "npx knex migrate:latest --knexfile knexfile.js",
+		"migrate:rollback": "npx knex migrate:rollback --knexfile knexfile.js",
+		"migrate:status": "npx knex migrate:status --knexfile knexfile.js",
+		"seed": "npx knex seed:run --knexfile knexfile.js"
 	},
+
 	"dependencies": {
 		"express": "^5.1.0",
 		"cors": "^2.8.5",
