@@ -1,11 +1,14 @@
 {
-  "name": "wmd-backend",
-  "type": "commonjs",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "node src/index.js"
-  },
-  "dependencies": {
-    "express": "^5.1.0"
-  }
+	"name": "wmd-backend",
+	"type": "commonjs",
+	"main": "src/index.js",
+	"scripts": {
+		"start": "node src/index.js"
+	},
+	"dependencies": {
+		"express": "^5.1.0",
+		"cors": "^2.8.5",
+		"knex": "^3.1.0",
+		"pg": "^8.16.3"
+	}
 }
