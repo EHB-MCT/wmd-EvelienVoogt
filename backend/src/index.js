@@ -4,6 +4,9 @@ const knex = require('./db/knex');
 
 app.use(express.json());
 
+const sessionRouter = require("./routes/session-routes");
+app.use("/api/sessions", sessionRouter);
+
 const eventsRouter = require("./routes/event-routes");
 
 app.use("/api/events", eventsRouter);
