@@ -5,6 +5,7 @@ import UserHome from "./user/pages/UserHome.jsx";
 import AdminHome from "./admin/pages/AdminHome.jsx";
 import { startSessionOnce, trackEvent } from "./lib/tracking.js";
 import PageViewTracker from "./lib/PageViewTracker.jsx";
+import IdleTracker from "./lib/IdleTracker.jsx";
 
 export default function App() {
 	useEffect(() => {
@@ -66,6 +67,8 @@ export default function App() {
 	return (
 		<BrowserRouter>
 			<PageViewTracker />
+			<PageViewTracker />
+			<IdleTracker idleMs={30000} />
 			<nav style={{ marginBottom: 16 }}>
 				<Link to="/">User</Link> | <Link to="/admin">Admin</Link>
 			</nav>
