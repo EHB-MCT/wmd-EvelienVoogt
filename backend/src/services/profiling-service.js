@@ -21,5 +21,6 @@ function computeMetrics(events = []) {
     eventCounts,
     timerStartCount: eventCounts['timer_start'] || 0,
     timerCompleteCount: eventCounts['timer_complete'] || 0,
+    timerInterruptCount: eventCounts['timer_interrupt'] || 0,
   };
 }
