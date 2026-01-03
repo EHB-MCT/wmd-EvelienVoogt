@@ -10,18 +10,15 @@ function buildProfile(events = []) {
 
 
 function computeMetrics(events = []) {
-	const eventCounts = events.reduce((acc, event) => {
-		const type = event.type || "unknown";
-		acc[type] = (acc[type] || 0) + 1;
-		return acc;
-	}, {});
+  const eventCounts = events.reduce((acc, event) => {
+    const type = event.type || 'unknown';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
 
-	return {
-		totalEvents: events.length,
-		eventCounts,
-	};
+  return {
+    totalEvents: events.length,
+    eventCounts,
+    timerStartCount: eventCounts['timer_start'] || 0,
+  };
 }
-
-module.exports = {
-	buildProfile,
-};
