@@ -1,6 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
+import UserHome from "./user/pages/UserHome.jsx";
+import AdminHome from "./admin/pages/AdminHome.jsx";
+
 function UserHome() {
   return <h2>User app</h2>;
 }
