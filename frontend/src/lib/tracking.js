@@ -1,5 +1,6 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 let sessionStartedAt = null;
+import { getDeviceInfo } from "../../lib/deviceInfo";
 
 export function getSessionId() {
 	return localStorage.getItem("session_id");
@@ -14,16 +15,14 @@ export async function startSessionOnce() {
 	// if we already have a session_id, reuse it
 	const existing = getSessionId();
 	if (existing) return existing;
-
+	const { device, browser, os } = getDeviceInfo();
 	const payload = {
 		language: navigator.language,
 		viewport_w: window.innerWidth,
 		viewport_h: window.innerHeight,
-
-		// later: fill these with real data
-		device: null,
-		browser: null,
-		os: null,
+		device,
+		browser,
+		os,
 	};
 
 	const res = await fetch(`${API_BASE}/api/sessions/start`, {
