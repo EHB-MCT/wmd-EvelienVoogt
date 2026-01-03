@@ -13,6 +13,9 @@ export default function AdminHome() {
 	const [profile, setProfile] = useState(null);
 	const [loadingProfile, setLoadingProfile] = useState(false);
 	const [profileError, setProfileError] = useState("");
+	const [events, setEvents] = useState([]);
+	const [loadingEvents, setLoadingEvents] = useState(false);
+	const [eventsError, setEventsError] = useState("");
 
 	useEffect(() => {
 		async function loadUsers() {
@@ -97,6 +100,33 @@ export default function AdminHome() {
 
 		loadProfile();
 	}, [selectedSessionId]);
+
+    useEffect(() => {
+  async function loadEvents() {
+    if (!selectedSessionId) return;
+
+    try {
+      setLoadingEvents(true);
+      setEventsError("");
+
+      const res = await fetch(
+        `${API_BASE}/api/admin/sessions/${selectedSessionId}/events`
+      );
+      if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
+
+      const data = await res.json();
+      setEvents(data.events || []);
+    } catch (e) {
+      console.error(e);
+      setEventsError(e.message || "Failed to load events");
+      setEvents([]);
+    } finally {
+      setLoadingEvents(false);
+    }
+  }
+
+  loadEvents();
+}, [selectedSessionId]);
 
 	return (
 		<div style={{ padding: 16 }}>
@@ -240,6 +270,46 @@ export default function AdminHome() {
 							)}
 						</div>
 					)}
+                    {selectedSessionId && (
+  <div style={{ marginTop: 24 }}>
+    <h3>Events timeline</h3>
+
+    {loadingEvents && <p>Loading events...</p>}
+    {eventsError && <p style={{ color: "crimson" }}>Error: {eventsError}</p>}
+
+    {!loadingEvents && !eventsError && events.length === 0 && (
+      <p>No events found for this session.</p>
+    )}
+
+    {!loadingEvents && !eventsError && events.length > 0 && (
+      <table border="1" cellPadding="6" style={{ borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Type</th>
+            <th>Path</th>
+            <th>Element</th>
+            <th>Value</th>
+            <th>Duration (ms)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {events.map((ev) => (
+            <tr key={ev.id}>
+              <td>{new Date(ev.created_at).toLocaleTimeString()}</td>
+              <td>{ev.type}</td>
+              <td>{ev.path}</td>
+              <td>{ev.element ?? "-"}</td>
+              <td>{ev.value ?? "-"}</td>
+              <td>{typeof ev.duration_ms === "number" ? ev.duration_ms : "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+)}
+
 				</>
 			)}
 		</div>
