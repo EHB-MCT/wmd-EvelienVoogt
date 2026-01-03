@@ -12,14 +12,30 @@ export default function UserHome() {
       alert("timer_start logged");
     } catch (e) {
       console.error(e);
-      alert("Failed to log timer_start (check console)");
+      alert("Failed to log timer_start");
+    }
+  };
+
+  const onCompleteFocus = async () => {
+    try {
+      await trackEvent({
+        type: "timer_complete",
+        path: window.location.pathname,
+        element: "complete-focus-button",
+      });
+      alert("timer_complete logged");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to log timer_complete");
     }
   };
 
   return (
     <div>
       <h2>User app</h2>
-      <button onClick={onStartFocus}>Start focus</button>
+
+      <button onClick={onStartFocus}>Start focus</button>{" "}
+      <button onClick={onCompleteFocus}>Complete focus</button>
     </div>
   );
 }
