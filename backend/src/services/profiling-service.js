@@ -20,5 +20,6 @@ function computeMetrics(events = []) {
     totalEvents: events.length,
     eventCounts,
     timerStartCount: eventCounts['timer_start'] || 0,
+    timerCompleteCount: eventCounts['timer_complete'] || 0,
   };
 }
