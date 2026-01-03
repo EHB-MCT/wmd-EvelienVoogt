@@ -7,6 +7,8 @@ export default function AdminHome() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sessions, setSessions] = useState([]);
+const [loadingSessions, setLoadingSessions] = useState(false);
 
   useEffect(() => {
     async function loadUsers() {
@@ -34,8 +36,34 @@ export default function AdminHome() {
 
     loadUsers();
   }, []);
+  useEffect(() => {
+  async function loadSessions() {
+    if (!selectedUserId) return;
+
+    try {
+      setLoadingSessions(true);
+
+      const res = await fetch(`${API_BASE}/api/admin/sessions`);
+      if (!res.ok) throw new Error("Failed to load sessions");
+
+      const data = await res.json();
+      setSessions(data.sessions || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingSessions(false);
+    }
+  }
+
+  loadSessions();
+}, [selectedUserId]);
+
 
   const selectedUser = users.find((u) => String(u.id) === String(selectedUserId));
+  const userSessions = sessions.filter(
+  (s) => String(s.user_id) === String(selectedUserId)
+);
+
 
   return (
     <div style={{ padding: 16 }}>
@@ -79,6 +107,41 @@ export default function AdminHome() {
               </ul>
             </div>
           )}
+          {selectedUser && (
+  <div style={{ marginTop: 24 }}>
+    <h3>Sessions for this user</h3>
+
+    {loadingSessions && <p>Loading sessions...</p>}
+
+    {!loadingSessions && userSessions.length === 0 && (
+      <p>No sessions found for this user.</p>
+    )}
+
+    {!loadingSessions && userSessions.length > 0 && (
+      <ul>
+        {userSessions.map((s) => (
+          <li key={s.session_id}>
+            <div>
+              <b>Session:</b> {s.session_id}
+            </div>
+            <div>
+              <small>
+                {new Date(s.started_at).toLocaleString()} →{" "}
+                {new Date(s.ended_at).toLocaleString()}
+              </small>
+            </div>
+            <div>
+              <small>
+                Events: {s.event_count} | {s.device} · {s.browser}
+              </small>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+)}
+
         </>
       )}
     </div>
