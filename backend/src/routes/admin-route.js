@@ -3,6 +3,7 @@ const {
   getSessionEvents,
   getSessionProfile,
   listSessions,
+  listUsers,
 } = require("../controllers/admin-controller");
 
 const router = express.Router();
@@ -10,5 +11,6 @@ const router = express.Router();
 router.get("/sessions/:sessionId/events", getSessionEvents);
 router.get("/sessions/:sessionId/profile", getSessionProfile);
 router.get("/sessions", listSessions);
+router.get("/users", listUsers);
 
 module.exports = router;

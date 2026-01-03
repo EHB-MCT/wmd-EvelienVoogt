@@ -62,10 +62,11 @@ async function listSessions(req, res) {
 
 	try {
 		const rows = await knex("sessions as s")
+			.leftJoin("users as u", "u.id", "s.user_id")
 			.leftJoin("events as e", "e.session_id", "s.session_id")
-			.select("s.id", "s.session_id", "s.user_id", "s.started_at", "s.ended_at", "s.device", "s.browser", "s.os", "s.language", "s.viewport_w", "s.viewport_h")
+			.select("s.id", "s.session_id", "s.user_id", "s.started_at", "s.ended_at", "s.device", "s.browser", "s.os", "s.language", "s.viewport_w", "s.viewport_h", "u.username", "u.first_name", "u.last_name", "u.email")
 			.count({ event_count: "e.id" })
-			.groupBy("s.id", "s.session_id", "s.user_id", "s.started_at", "s.ended_at", "s.device", "s.browser", "s.os", "s.language", "s.viewport_w", "s.viewport_h")
+			.groupBy("s.id", "s.session_id", "s.user_id", "s.started_at", "s.ended_at", "s.device", "s.browser", "s.os", "s.language", "s.viewport_w", "s.viewport_h", "u.username", "u.first_name", "u.last_name", "u.email")
 			.orderBy("s.started_at", "desc")
 			.limit(limit);
 
@@ -85,8 +86,20 @@ async function listSessions(req, res) {
 	}
 }
 
+async function listUsers(req, res) {
+	try {
+		const users = await knex("users").select("id", "username", "first_name", "last_name", "email", "created_at").orderBy("created_at", "desc");
+
+		return res.status(200).json({ count: users.length, users });
+	} catch (err) {
+		console.error(err);
+		return res.status(500).json({ error: "internal_server_error" });
+	}
+}
+
 module.exports = {
 	getSessionEvents,
 	getSessionProfile,
 	listSessions,
+	listUsers,
 };
