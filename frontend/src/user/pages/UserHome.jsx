@@ -4,7 +4,13 @@ import { trackEvent, msSinceSessionStart } from "../../lib/tracking.js";
 export default function UserHome() {
 	const [taskTitle, setTaskTitle] = useState("");
 	const [tasks, setTasks] = useState([]);
+	const [editingTaskId, setEditingTaskId] = useState(null);
+	const [editValue, setEditValue] = useState("");
 
+	const startEditing = (task) => {
+		setEditingTaskId(task.id);
+		setEditValue(task.title);
+	};
 	// --- TIMER EVENTS ---
 	const onStartFocus = async () => {
 		try {
@@ -117,6 +123,26 @@ export default function UserHome() {
 		}
 	};
 
+	// --- TASK EDIT ---
+	const saveEdit = async (task) => {
+		const newTitle = editValue.trim();
+
+		if (!newTitle) return;
+		setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, title: newTitle } : t)));
+		setEditingTaskId(null);
+		try {
+			await trackEvent({
+				type: "task_edit",
+				path: window.location.pathname,
+				element: "task-title",
+				value: newTitle,
+				metadata: { task_id: task.id },
+			});
+			console.log("task_edit sent", { task_id: task.id });
+		} catch (e) {
+			console.error("task_edit failed", e);
+		}
+	};
 	return (
 		<div>
 			<h2>User app</h2>
@@ -136,7 +162,24 @@ export default function UserHome() {
 			<ul>
 				{tasks.map((t) => (
 					<li key={t.id}>
-						<button onClick={() => toggleTask(t)}>{t.done ? "Undo" : "Done"}</button> {t.done ? <s>{t.title}</s> : t.title} <button onClick={() => deleteTask(t)}>Delete</button>
+						<button onClick={() => toggleTask(t)}>{t.done ? "Undo" : "Done"}</button>{" "}
+						{editingTaskId === t.id ? (
+							<input
+								value={editValue}
+								onChange={(e) => setEditValue(e.target.value)}
+								autoFocus
+								onBlur={() => saveEdit(t)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") saveEdit(t);
+									if (e.key === "Escape") setEditingTaskId(null);
+								}}
+							/>
+						) : (
+							<span onClick={() => startEditing(t)} style={{ cursor: "pointer", userSelect: "none" }} title="Click to edit">
+								{t.done ? <s>{t.title}</s> : t.title}
+							</span>
+						)}{" "}
+						<button onClick={() => deleteTask(t)}>Delete</button>
 					</li>
 				))}
 			</ul>
