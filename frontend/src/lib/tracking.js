@@ -42,3 +42,24 @@ export async function startSessionOnce() {
   localStorage.setItem("session_id", data.session_id);
   return data.session_id;
 }
+
+export async function trackEvent({ type, path, element, value, duration_ms, metadata }) {
+  const session_id = getSessionId();
+  if (!session_id) throw new Error("No session_id (startSessionOnce not called?)");
+
+  const res = await fetch(`${API_BASE}/api/events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id,
+      type,
+      path,
+      element,
+      value,
+      duration_ms,
+      metadata,
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Failed to track event (${res.status})`);
+}
