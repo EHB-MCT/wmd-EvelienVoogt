@@ -12,6 +12,9 @@ app.use(express.json());
 const optionalAuth = require("./middleware/optional-auth");
 app.use(optionalAuth);
 
+const adminRouter = require("./routes/admin-route");
+app.use("/api/admin", adminRouter);
+
 const sessionRouter = require("./routes/session-routes");
 app.use("/api/sessions", sessionRouter);
 
