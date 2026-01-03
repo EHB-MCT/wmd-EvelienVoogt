@@ -23,11 +23,13 @@ async function postEvent(req, res) {
 	const cleanPath = path.trim();
 	const cleanSessionId = session_id.trim();
 
-	const session = await knex("sessions").select("session_id").where({ session_id: cleanSessionId }).first();
+	const session = await knex("sessions").select("session_id", "user_id").where({ session_id: cleanSessionId }).first();
 
 	if (!session) {
 		return res.status(404).json({ error: "Unknown session_id" });
 	}
+
+	const eventUserId = session.user_id ?? null;
 
 	let cleanDuration = null;
 
@@ -44,7 +46,8 @@ async function postEvent(req, res) {
 	try {
 		const [event] = await knex("events")
 			.insert({
-				session_id: cleanSessionId,
+				user_id: eventUserId,
+                session_id: cleanSessionId,
 				type: cleanType,
 				path: cleanPath,
 				element: element ?? null,

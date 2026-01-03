@@ -1,8 +1,11 @@
 const express = require("express");
 const app = express();
-const knex = require('./db/knex');
+const knex = require("./db/knex");
 
 app.use(express.json());
+
+const optionalAuth = require("./middleware/optional-auth");
+app.use(optionalAuth);
 
 const sessionRouter = require("./routes/session-routes");
 app.use("/api/sessions", sessionRouter);
@@ -12,16 +15,19 @@ const eventsRouter = require("./routes/event-routes");
 app.use("/api/events", eventsRouter);
 console.log("events router mounted at /api/events");
 
+const authRouter = require("./routes/auth-routes");
+app.use("/api/auth", authRouter);
+
 app.get("/", (req, res) => {
 	res.send({ message: "hello" });
 });
 
-app.get('/health', async (req, res) => {
+app.get("/health", async (req, res) => {
 	try {
-		await knex.raw('select 1+1 as result');
-		res.send({ status: 'ok' });
+		await knex.raw("select 1+1 as result");
+		res.send({ status: "ok" });
 	} catch (err) {
-		res.status(500).send({ status: 'error', message: err.message });
+		res.status(500).send({ status: "error", message: err.message });
 	}
 });
 
