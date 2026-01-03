@@ -1,12 +1,13 @@
-
 function buildProfile(events = []) {
-  return {
-    metrics: {},
-    scores: {},
-    labels: [],
-  };
+	return {
+		metrics: {
+			totalEvents: events.length,
+		},
+		scores: {},
+		labels: [],
+	};
 }
 
 module.exports = {
-  buildProfile,
+	buildProfile,
 };
