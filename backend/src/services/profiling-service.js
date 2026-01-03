@@ -1,20 +1,27 @@
 function buildProfile(events = []) {
-  const eventCounts = events.reduce((acc, event) => {
-    const type = event.type || 'unknown';
-    acc[type] = (acc[type] || 0) + 1;
-    return acc;
-  }, {});
+	const metrics = computeMetrics(events);
 
-  return {
-    metrics: {
-      totalEvents: events.length,
-      eventCounts,
-    },
-    scores: {},
-    labels: [],
-  };
+	return {
+		metrics,
+		scores: {},
+		labels: [],
+	};
+}
+
+
+function computeMetrics(events = []) {
+	const eventCounts = events.reduce((acc, event) => {
+		const type = event.type || "unknown";
+		acc[type] = (acc[type] || 0) + 1;
+		return acc;
+	}, {});
+
+	return {
+		totalEvents: events.length,
+		eventCounts,
+	};
 }
 
 module.exports = {
-  buildProfile,
+	buildProfile,
 };
