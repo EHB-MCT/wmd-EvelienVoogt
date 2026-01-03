@@ -4,6 +4,9 @@ const knex = require("./db/knex");
 
 app.use(express.json());
 
+const optionalAuth = require("./middleware/optional-auth");
+app.use(optionalAuth);
+
 const sessionRouter = require("./routes/session-routes");
 app.use("/api/sessions", sessionRouter);
 

@@ -3,7 +3,6 @@ const knex = require("../db/knex");
 
 async function startSession(req, res) {
   const {
-    user_id,
     device,
     browser,
     os,
@@ -11,6 +10,8 @@ async function startSession(req, res) {
     viewport_w,
     viewport_h,
   } = req.body ?? {};
+
+const user_id = req.user?.user_id ?? null;
 
   const session_id = crypto.randomUUID();
 
