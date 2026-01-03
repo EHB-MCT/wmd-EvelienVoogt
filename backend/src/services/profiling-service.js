@@ -24,3 +24,11 @@ function computeMetrics(events = []) {
     timerInterruptCount: eventCounts['timer_interrupt'] || 0,
   };
 }
+
+function computeScores(metrics) {
+  return {};
+}
+
+module.exports = {
+  buildProfile,
+};
