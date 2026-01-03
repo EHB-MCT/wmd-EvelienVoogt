@@ -1,18 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 import UserHome from "./user/pages/UserHome.jsx";
 import AdminHome from "./admin/pages/AdminHome.jsx";
-
-function UserHome() {
-  return <h2>User app</h2>;
-}
-
-function AdminHome() {
-  return <h2>Admin dashboard</h2>;
-}
+import { startSessionOnce } from "./lib/tracking.js";
 
 export default function App() {
+  useEffect(() => {
+    startSessionOnce().catch(console.error);
+  }, []);
+
   return (
     <BrowserRouter>
       <nav style={{ marginBottom: 16 }}>
