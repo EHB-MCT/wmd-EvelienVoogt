@@ -30,12 +30,26 @@ export default function UserHome() {
     }
   };
 
+  const onInterruptFocus = async () => {
+  try {
+    await trackEvent({
+      type: "timer_interrupt",
+      path: window.location.pathname,
+      element: "interrupt-focus-button",
+    });
+    alert("timer_interrupt logged");
+  } catch (e) {
+    console.error(e);
+    alert("Failed to log timer_interrupt");
+  }
+};
+
   return (
     <div>
       <h2>User app</h2>
-
       <button onClick={onStartFocus}>Start focus</button>{" "}
       <button onClick={onCompleteFocus}>Complete focus</button>
+      <button onClick={onInterruptFocus}>Interrupt focus</button>
     </div>
   );
 }
