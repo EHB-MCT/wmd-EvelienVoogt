@@ -2,6 +2,16 @@ const express = require("express");
 const app = express();
 const knex = require('./db/knex');
 
+app.use(express.json());
+
+const sessionRouter = require("./routes/session-routes");
+app.use("/api/sessions", sessionRouter);
+
+const eventsRouter = require("./routes/event-routes");
+
+app.use("/api/events", eventsRouter);
+console.log("events router mounted at /api/events");
+
 app.get("/", (req, res) => {
 	res.send({ message: "hello" });
 });
