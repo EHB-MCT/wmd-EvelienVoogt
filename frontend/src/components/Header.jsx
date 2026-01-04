@@ -14,7 +14,9 @@ export default function Header() {
 	return (
 		<header className="site-header">
 			<div>
-				<Link to="/" className="logo">FocusFlow</Link>
+				<Link to="/" className="logo">
+					FocusFlow
+				</Link>
 			</div>
 
 			<nav className="main-nav">
@@ -30,7 +32,9 @@ export default function Header() {
 				{user ? (
 					<>
 						<span className="greeting">Hi, {user.first_name || user.username}</span>
-						<button className="btn" onClick={onLogout}>Log out</button>
+						<button className="btn" onClick={onLogout}>
+							Log out
+						</button>
 					</>
 				) : (
 					<>
