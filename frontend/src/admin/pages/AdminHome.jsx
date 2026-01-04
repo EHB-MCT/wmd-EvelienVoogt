@@ -489,6 +489,7 @@ export default function AdminHome() {
 												<th>Element</th>
 												<th>Value</th>
 												<th>Duration (ms)</th>
+												<th>Metadata</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -500,6 +501,7 @@ export default function AdminHome() {
 													<td>{ev.element ?? "-"}</td>
 													<td>{ev.value ?? "-"}</td>
 													<td>{typeof ev.duration_ms === "number" ? ev.duration_ms : "-"}</td>
+													<td style={{ maxWidth: 420, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{ev.metadata ? JSON.stringify(ev.metadata, null, 2) : "-"}</td>
 												</tr>
 											))}
 										</tbody>
