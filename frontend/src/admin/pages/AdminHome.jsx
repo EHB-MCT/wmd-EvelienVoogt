@@ -22,6 +22,7 @@ export default function AdminHome() {
 	const [labelsBySessionId, setLabelsBySessionId] = useState({}); // { [session_id]: ["Focused", ...] }
 	const [loadingOverview, setLoadingOverview] = useState(false);
 	const [overviewError, setOverviewError] = useState("");
+	const [globalLabelFilter, setGlobalLabelFilter] = useState("all");
 
 	useEffect(() => {
 		async function loadUsers() {
@@ -210,6 +211,15 @@ export default function AdminHome() {
 		loadLabelsForSessions();
 	}, [allSessions]);
 
+	useEffect(() => {
+		if (globalLabelFilter === "all") return;
+		const first = allSessions.find((s) => {
+			const labels = labelsBySessionId[s.session_id] || [];
+			return labels.includes(globalLabelFilter);
+		});
+		if (first) setSelectedSessionId(first.session_id);
+	}, [globalLabelFilter, allSessions, labelsBySessionId]);
+
 	const sessionCount = allSessions.length;
 
 	const avgEventCount = sessionCount === 0 ? 0 : Math.round(allSessions.reduce((sum, s) => sum + Number(s.event_count || 0), 0) / sessionCount);
@@ -220,6 +230,12 @@ export default function AdminHome() {
 		});
 		return acc;
 	}, {});
+
+	const globallyFilteredSessions = allSessions.filter((s) => {
+		if (globalLabelFilter === "all") return true;
+		const labels = labelsBySessionId[s.session_id] || [];
+		return labels.includes(globalLabelFilter);
+	});
 
 	return (
 		<div style={{ padding: 16 }}>
@@ -242,6 +258,7 @@ export default function AdminHome() {
 						</ul>
 
 						<h4>Sessions per label</h4>
+						<h4>Sessions per label</h4>
 
 						{Object.keys(labelCounts).length === 0 ? (
 							<p>
@@ -253,12 +270,57 @@ export default function AdminHome() {
 									.sort((a, b) => b[1] - a[1])
 									.map(([label, count]) => (
 										<li key={label}>
+											<button onClick={() => setGlobalLabelFilter(label)} style={{ cursor: "pointer", marginRight: 8 }}>
+												Show sessions
+											</button>
 											<b>{label}:</b> {count}
 										</li>
 									))}
 							</ul>
 						)}
+
+						{globalLabelFilter !== "all" && (
+							<p>
+								<small>
+									Active label filter: <b>{globalLabelFilter}</b> <button onClick={() => setGlobalLabelFilter("all")}>Clear</button>
+								</small>
+							</p>
+						)}
 					</>
+				)}
+			</div>
+			<div style={{ marginTop: 16, padding: 12, border: "1px solid #ddd" }}>
+				<h3>All sessions</h3>
+
+				{globalLabelFilter !== "all" && (
+					<p>
+						<small>
+							Showing sessions with label: <b>{globalLabelFilter}</b>
+						</small>
+					</p>
+				)}
+
+				{globallyFilteredSessions.length === 0 ? (
+					<p>No sessions match this filter.</p>
+				) : (
+					<ul>
+						{globallyFilteredSessions.map((s) => {
+							const labels = labelsBySessionId[s.session_id] || [];
+							return (
+								<li key={s.session_id} style={{ marginBottom: 10 }}>
+									<button onClick={() => setSelectedSessionId(s.session_id)} style={{ cursor: "pointer", marginRight: 8 }}>
+										Open
+									</button>
+									<b>{s.session_id}</b> — {s.username} ({s.email}) — events: {s.event_count}
+									{labels.length > 0 && (
+										<div>
+											<small>Labels: {labels.join(", ")}</small>
+										</div>
+									)}
+								</li>
+							);
+						})}
+					</ul>
 				)}
 			</div>
 
