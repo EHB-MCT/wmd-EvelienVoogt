@@ -15,6 +15,9 @@ app.use(optionalAuth);
 const adminRouter = require("./routes/admin-route");
 app.use("/api/admin", adminRouter);
 
+const profileRouter = require("./routes/profile-routes");
+app.use("/api/profile", profileRouter);
+
 const sessionRouter = require("./routes/session-routes");
 app.use("/api/sessions", sessionRouter);
 
