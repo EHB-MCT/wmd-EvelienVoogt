@@ -206,9 +206,11 @@ export default function AdminHome() {
 			try {
 				const batch = missing.slice(0, 50);
 
+				const token = getAuthToken();
+
 				const results = await Promise.all(
 					batch.map(async (sessionId) => {
-						const res = await fetch(`${API_BASE}/api/admin/sessions/${sessionId}/profile`);
+						const res = await fetch(`${API_BASE}/api/admin/sessions/${sessionId}/profile`, { headers: { Authorization: `Bearer ${token}` } });
 						if (!res.ok) return [sessionId, []];
 
 						const data = await res.json();
