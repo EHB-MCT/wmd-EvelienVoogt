@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 import UserHome from "./user/pages/UserHome.jsx";
+import TimerPage from "./user/pages/TimerPage.jsx";
+import TasksPage from "./user/pages/TasksPage.jsx";
 import AdminHome from "./admin/pages/AdminHome.jsx";
 import { startSessionOnce, trackEvent } from "./lib/tracking.js";
 import PageViewTracker from "./lib/PageViewTracker.jsx";
@@ -70,11 +72,13 @@ export default function App() {
 			<PageViewTracker />
 			<IdleTracker idleMs={30000} />
 			<nav style={{ marginBottom: 16 }}>
-				<Link to="/">User</Link> | <Link to="/admin">Admin</Link>
+				<Link to="/">Home</Link> | <Link to="/timer">Timer</Link> | <Link to="/tasks">Tasks</Link> | <Link to="/admin">Admin</Link>
 			</nav>
 
 			<Routes>
 				<Route path="/" element={<UserHome />} />
+				<Route path="/timer" element={<TimerPage />} />
+				<Route path="/tasks" element={<TasksPage />} />
 				<Route path="/admin" element={<AdminHome />} />
 			</Routes>
 		</BrowserRouter>
