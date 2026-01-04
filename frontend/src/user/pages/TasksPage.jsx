@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { trackEvent, msSinceSessionStart } from "../../lib/tracking";
+import { createProfileManager } from "../../lib/profileManager.js";
 
 export default function TasksPage() {
 	const [taskTitle, setTaskTitle] = useState("");
@@ -99,6 +100,32 @@ export default function TasksPage() {
 			console.error("task_edit failed", e);
 		}
 	};
+
+	const mgrRef = React.useRef(null);
+	const [labels, setLabels] = React.useState([]);
+	const [profileError, setProfileError] = React.useState("");
+	const [profileLoading, setProfileLoading] = React.useState(false);
+
+	React.useEffect(() => {
+		mgrRef.current = createProfileManager();
+
+		async function loadProfile() {
+			try {
+				setProfileLoading(true);
+				setProfileError("");
+				await mgrRef.current.load();
+				setLabels(mgrRef.current.getLabels());
+			} catch (e) {
+				setProfileError(e.message || "Failed to load profile");
+				setLabels([]);
+			} finally {
+				setProfileLoading(false);
+			}
+		}
+
+		loadProfile().catch(console.error);
+	}, []);
+
 	return (
 		<div>
 			<h3>Tasks</h3>

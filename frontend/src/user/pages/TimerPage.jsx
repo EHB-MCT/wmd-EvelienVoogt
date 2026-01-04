@@ -1,5 +1,6 @@
 import React from "react";
 import { trackEvent, msSinceSessionStart } from "../../lib/tracking";
+import { createProfileManager } from "../../lib/profileManager.js";
 
 export default function TimerPage() {
 	const [elapsed, setElapsed] = React.useState(0); // seconds
@@ -105,6 +106,31 @@ export default function TimerPage() {
 		});
 		console.log("timer_interrupt sent", { duration_ms: durationMs });
 	};
+
+	const mgrRef = React.useRef(null);
+	const [labels, setLabels] = React.useState([]);
+	const [profileError, setProfileError] = React.useState("");
+	const [profileLoading, setProfileLoading] = React.useState(false);
+
+	React.useEffect(() => {
+		mgrRef.current = createProfileManager();
+
+		async function loadProfile() {
+			try {
+				setProfileLoading(true);
+				setProfileError("");
+				await mgrRef.current.load();
+				setLabels(mgrRef.current.getLabels());
+			} catch (e) {
+				setProfileError(e.message || "Failed to load profile");
+				setLabels([]);
+			} finally {
+				setProfileLoading(false);
+			}
+		}
+
+		loadProfile().catch(console.error);
+	}, []);
 
 	return (
 		<div style={{ padding: 16 }}>
