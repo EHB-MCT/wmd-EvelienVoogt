@@ -108,7 +108,9 @@ export default function TimerPage() {
 	};
 
 	const mgrRef = React.useRef(null);
+
 	const [labels, setLabels] = React.useState([]);
+	const [tip, setTip] = React.useState("");
 	const [profileError, setProfileError] = React.useState("");
 	const [profileLoading, setProfileLoading] = React.useState(false);
 
@@ -119,11 +121,17 @@ export default function TimerPage() {
 			try {
 				setProfileLoading(true);
 				setProfileError("");
+
 				await mgrRef.current.load();
-				setLabels(mgrRef.current.getLabels());
+
+				const nextLabels = mgrRef.current.getLabels();
+				setLabels(nextLabels);
+
+				setTip(mgrRef.current.pickTip());
 			} catch (e) {
 				setProfileError(e.message || "Failed to load profile");
 				setLabels([]);
+				setTip("");
 			} finally {
 				setProfileLoading(false);
 			}
@@ -135,6 +143,12 @@ export default function TimerPage() {
 	return (
 		<div style={{ padding: 16 }}>
 			<h2>Timer</h2>
+			{tip && (
+				<div className="hint-banner">
+					<small>{tip}</small>
+				</div>
+			)}
+
 			<p>
 				<small>Simple controls for now — later we add a real countdown.</small>
 			</p>

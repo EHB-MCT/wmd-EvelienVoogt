@@ -102,7 +102,9 @@ export default function TasksPage() {
 	};
 
 	const mgrRef = React.useRef(null);
+
 	const [labels, setLabels] = React.useState([]);
+	const [tip, setTip] = React.useState("");
 	const [profileError, setProfileError] = React.useState("");
 	const [profileLoading, setProfileLoading] = React.useState(false);
 
@@ -113,11 +115,17 @@ export default function TasksPage() {
 			try {
 				setProfileLoading(true);
 				setProfileError("");
+
 				await mgrRef.current.load();
-				setLabels(mgrRef.current.getLabels());
+
+				const nextLabels = mgrRef.current.getLabels();
+				setLabels(nextLabels);
+
+				setTip(mgrRef.current.pickTip());
 			} catch (e) {
 				setProfileError(e.message || "Failed to load profile");
 				setLabels([]);
+				setTip("");
 			} finally {
 				setProfileLoading(false);
 			}
@@ -129,6 +137,11 @@ export default function TasksPage() {
 	return (
 		<div>
 			<h3>Tasks</h3>
+			{tip && (
+				<div className="hint-banner">
+					<small>{tip}</small>
+				</div>
+			)}
 
 			<form onSubmit={onCreateTask} style={{ marginBottom: 12 }}>
 				<input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder="New task..." /> <button type="submit">Add</button>
