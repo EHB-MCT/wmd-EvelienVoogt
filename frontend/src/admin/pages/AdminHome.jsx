@@ -23,6 +23,7 @@ export default function AdminHome() {
 	const [loadingOverview, setLoadingOverview] = useState(false);
 	const [overviewError, setOverviewError] = useState("");
 	const [globalLabelFilter, setGlobalLabelFilter] = useState("all");
+	const [viewMode, setViewMode] = useState("overview"); // "overview" | "user"
 
 	useEffect(() => {
 		async function loadUsers() {
@@ -240,291 +241,503 @@ export default function AdminHome() {
 	return (
 		<div style={{ padding: 16 }}>
 			<h2>Admin dashboard</h2>
-			<div style={{ marginTop: 12, padding: 12, border: "1px solid #ddd" }}>
-				<h3>Overview</h3>
+			<div style={{ marginBottom: 12 }}>
+				<button
+					onClick={() => setViewMode("overview")}
+					style={{
+						fontWeight: viewMode === "overview" ? "bold" : "normal",
+						marginRight: 8,
+						cursor: "pointer",
+					}}
+				>
+					Total overview
+				</button>
 
-				{loadingOverview && <p>Loading overview...</p>}
-				{overviewError && <p style={{ color: "crimson" }}>Error: {overviewError}</p>}
-
-				{!loadingOverview && !overviewError && (
-					<>
-						<ul>
-							<li>
-								<b>Total sessions:</b> {sessionCount}
-							</li>
-							<li>
-								<b>Average event_count:</b> {avgEventCount}
-							</li>
-						</ul>
-
-						<h4>Sessions per label</h4>
-						<h4>Sessions per label</h4>
-
-						{Object.keys(labelCounts).length === 0 ? (
-							<p>
-								<small>Loading labels… (profiles are computed per session)</small>
-							</p>
-						) : (
-							<ul>
-								{Object.entries(labelCounts)
-									.sort((a, b) => b[1] - a[1])
-									.map(([label, count]) => (
-										<li key={label}>
-											<button onClick={() => setGlobalLabelFilter(label)} style={{ cursor: "pointer", marginRight: 8 }}>
-												Show sessions
-											</button>
-											<b>{label}:</b> {count}
-										</li>
-									))}
-							</ul>
-						)}
-
-						{globalLabelFilter !== "all" && (
-							<p>
-								<small>
-									Active label filter: <b>{globalLabelFilter}</b> <button onClick={() => setGlobalLabelFilter("all")}>Clear</button>
-								</small>
-							</p>
-						)}
-					</>
-				)}
-			</div>
-			<div style={{ marginTop: 16, padding: 12, border: "1px solid #ddd" }}>
-				<h3>All sessions</h3>
-
-				{globalLabelFilter !== "all" && (
-					<p>
-						<small>
-							Showing sessions with label: <b>{globalLabelFilter}</b>
-						</small>
-					</p>
-				)}
-
-				{globallyFilteredSessions.length === 0 ? (
-					<p>No sessions match this filter.</p>
-				) : (
-					<ul>
-						{globallyFilteredSessions.map((s) => {
-							const labels = labelsBySessionId[s.session_id] || [];
-							return (
-								<li key={s.session_id} style={{ marginBottom: 10 }}>
-									<button onClick={() => setSelectedSessionId(s.session_id)} style={{ cursor: "pointer", marginRight: 8 }}>
-										Open
-									</button>
-									<b>{s.session_id}</b> — {s.username} ({s.email}) — events: {s.event_count}
-									{labels.length > 0 && (
-										<div>
-											<small>Labels: {labels.join(", ")}</small>
-										</div>
-									)}
-								</li>
-							);
-						})}
-					</ul>
-				)}
+				<button
+					onClick={() => setViewMode("user")}
+					style={{
+						fontWeight: viewMode === "user" ? "bold" : "normal",
+						cursor: "pointer",
+					}}
+				>
+					User detail
+				</button>
 			</div>
 
-			{loading && <p>Loading users...</p>}
-			{error && <p style={{ color: "crimson" }}>Error: {error}</p>}
+			<div
+				style={{
+					display: "grid",
+					gridTemplateColumns: "1fr 1.2fr",
+					gap: 16,
+					alignItems: "start",
+				}}
+			>
+				{viewMode === "overview" && (
+					<div
+						style={{
+							display: "grid",
+							gridTemplateColumns: "1fr 1fr",
+							gap: 16,
+							alignItems: "start",
+						}}
+					>
+						{/* LEFT: Overview + All sessions */}
+						<div>
+							<div style={{ marginTop: 12, padding: 12, border: "1px solid #ddd" }}>
+								<h3>Overview</h3>
 
-			{!loading && !error && (
-				<>
-					<label>
-						Select user:{" "}
-						<select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
-							{users.map((u) => (
-								<option key={u.id} value={u.id}>
-									{u.username} — {u.first_name} {u.last_name}
-								</option>
-							))}
-						</select>
-					</label>
+								{loadingOverview && <p>Loading overview...</p>}
+								{overviewError && <p style={{ color: "crimson" }}>Error: {overviewError}</p>}
 
-					{selectedUser && (
-						<div style={{ marginTop: 16 }}>
-							<h3>User info</h3>
-							<ul>
-								<li>
-									<b>ID:</b> {selectedUser.id}
-								</li>
-								<li>
-									<b>Username:</b> {selectedUser.username}
-								</li>
-								<li>
-									<b>Name:</b> {selectedUser.first_name} {selectedUser.last_name}
-								</li>
-								<li>
-									<b>Email:</b> {selectedUser.email}
-								</li>
-							</ul>
-						</div>
-					)}
-					{selectedUser && (
-						<div style={{ marginTop: 24 }}>
-							<h3>Sessions for this user</h3>
-
-							{loadingSessions && <p>Loading sessions...</p>}
-
-							{!loadingSessions && userSessions.length === 0 && <p>No sessions found for this user.</p>}
-
-							{!loadingSessions && userSessions.length > 0 && (
-								<ul>
-									{userSessions.map((s) => (
-										<li key={s.session_id} style={{ marginBottom: 10 }}>
-											<button
-												onClick={() => setSelectedSessionId(s.session_id)}
-												style={{
-													fontWeight: s.session_id === selectedSessionId ? "bold" : "normal",
-													cursor: "pointer",
-													marginBottom: 6,
-												}}
-											>
-												Select
-											</button>
-											<div>
-												<b>Session:</b> {s.session_id}
-											</div>
-											<div>
-												<small>
-													{new Date(s.started_at).toLocaleString()} → {new Date(s.ended_at).toLocaleString()}
-												</small>
-											</div>
-											<div>
-												<small>
-													Events: {s.event_count} | {s.device} · {s.browser}
-												</small>
-											</div>
-										</li>
-									))}
-								</ul>
-							)}
-						</div>
-					)}
-					{selectedSessionId && (
-						<div style={{ marginTop: 24 }}>
-							<h3>Session profile</h3>
-							<p>
-								<b>Selected session:</b> {selectedSessionId}
-							</p>
-
-							{loadingProfile && <p>Loading profile...</p>}
-							{profileError && <p style={{ color: "crimson" }}>Error: {profileError}</p>}
-
-							{!loadingProfile && !profileError && profile && (
-								<>
-									<h4>Labels</h4>
-									{profile.labels?.length ? (
+								{!loadingOverview && !overviewError && (
+									<>
 										<ul>
-											{profile.labels.map((l) => (
-												<li key={l}>{l}</li>
-											))}
+											<li>
+												<b>Total sessions:</b> {sessionCount}
+											</li>
+											<li>
+												<b>Average event_count:</b> {avgEventCount}
+											</li>
 										</ul>
-									) : (
-										<p>No labels</p>
-									)}
 
-									<h4>Scores</h4>
+										<h4>Sessions per label</h4>
+
+										{Object.keys(labelCounts).length === 0 ? (
+											<p>
+												<small>Loading labels… (profiles are computed per session)</small>
+											</p>
+										) : (
+											<ul>
+												{Object.entries(labelCounts)
+													.sort((a, b) => b[1] - a[1])
+													.map(([label, count]) => (
+														<li key={label}>
+															<button onClick={() => setGlobalLabelFilter(label)} style={{ cursor: "pointer", marginRight: 8 }}>
+																Show sessions
+															</button>
+															<b>{label}:</b> {count}
+														</li>
+													))}
+											</ul>
+										)}
+
+										{globalLabelFilter !== "all" && (
+											<p>
+												<small>
+													Active label filter: <b>{globalLabelFilter}</b> <button onClick={() => setGlobalLabelFilter("all")}>Clear</button>
+												</small>
+											</p>
+										)}
+									</>
+								)}
+							</div>
+
+							<div style={{ marginTop: 16, padding: 12, border: "1px solid #ddd" }}>
+								<h3>All sessions</h3>
+
+								{globalLabelFilter !== "all" && (
+									<p>
+										<small>
+											Showing sessions with label: <b>{globalLabelFilter}</b>
+										</small>
+									</p>
+								)}
+
+								{globallyFilteredSessions.length === 0 ? (
+									<p>No sessions match this filter.</p>
+								) : (
 									<ul>
-										{Object.entries(profile.scores || {})
-											.filter(([k]) => k !== "labels")
-											.map(([k, v]) => (
-												<li key={k}>
-													<b>{k}:</b> {v}
+										{globallyFilteredSessions.map((s) => {
+											const labels = labelsBySessionId[s.session_id] || [];
+											return (
+												<li key={s.session_id} style={{ marginBottom: 10 }}>
+													<button onClick={() => setSelectedSessionId(s.session_id)} style={{ cursor: "pointer", marginRight: 8 }}>
+														Open
+													</button>
+													<b>{s.session_id}</b> — {s.username} ({s.email}) — events: {s.event_count}
+													{labels.length > 0 && (
+														<div>
+															<small>Labels: {labels.join(", ")}</small>
+														</div>
+													)}
 												</li>
-											))}
+											);
+										})}
 									</ul>
+								)}
+							</div>
+						</div>
 
-									<h4>Key metrics</h4>
-									<ul>
-										<li>
-											<b>totalEvents:</b> {profile.metrics?.totalEvents}
-										</li>
-										<li>
-											<b>timerStartCount:</b> {profile.metrics?.timerStartCount}
-										</li>
-										<li>
-											<b>timerCompleteCount:</b> {profile.metrics?.timerCompleteCount}
-										</li>
-										<li>
-											<b>taskCreateCount:</b> {profile.metrics?.taskCreateCount}
-										</li>
-										<li>
-											<b>taskCompleteCount:</b> {profile.metrics?.taskCompleteCount}
-										</li>
-										<li>
-											<b>tabBlurCount:</b> {profile.metrics?.tabBlurCount}
-										</li>
-										<li>
-											<b>avgTabBlurDurationMs:</b> {profile.metrics?.avgTabBlurDurationMs}
-										</li>
-									</ul>
+						{/* RIGHT: Session profile */}
+						<div style={{ marginTop: 12, padding: 12, border: "1px solid #ddd" }}>
+							<h3>Session profile</h3>
+
+							{!selectedSessionId && <p>Select a session to see its profile.</p>}
+
+							{selectedSessionId && (
+								<>
+									<p>
+										<b>Selected session:</b> {selectedSessionId}
+									</p>
+
+									{loadingProfile && <p>Loading profile...</p>}
+									{profileError && <p style={{ color: "crimson" }}>Error: {profileError}</p>}
+
+									{!loadingProfile && !profileError && profile && (
+										<>
+											<h4>Labels</h4>
+											{profile.labels?.length ? (
+												<ul>
+													{profile.labels.map((l) => (
+														<li key={l}>{l}</li>
+													))}
+												</ul>
+											) : (
+												<p>No labels</p>
+											)}
+
+											<h4>Scores</h4>
+											<ul>
+												{Object.entries(profile.scores || {})
+													.filter(([k]) => k !== "labels")
+													.map(([k, v]) => (
+														<li key={k}>
+															<b>{k}:</b> {v}
+														</li>
+													))}
+											</ul>
+
+											<h4>Key metrics</h4>
+											<ul>
+												<li>
+													<b>totalEvents:</b> {profile.metrics?.totalEvents}
+												</li>
+												<li>
+													<b>timerStartCount:</b> {profile.metrics?.timerStartCount}
+												</li>
+												<li>
+													<b>timerCompleteCount:</b> {profile.metrics?.timerCompleteCount}
+												</li>
+												<li>
+													<b>taskCreateCount:</b> {profile.metrics?.taskCreateCount}
+												</li>
+												<li>
+													<b>taskCompleteCount:</b> {profile.metrics?.taskCompleteCount}
+												</li>
+												<li>
+													<b>tabBlurCount:</b> {profile.metrics?.tabBlurCount}
+												</li>
+												<li>
+													<b>avgTabBlurDurationMs:</b> {profile.metrics?.avgTabBlurDurationMs}
+												</li>
+											</ul>
+										</>
+									)}
 								</>
 							)}
 						</div>
-					)}
-					{selectedSessionId && (
-						<div style={{ marginTop: 24 }}>
-							<h3>Events timeline</h3>
-							{!loadingEvents && !eventsError && events.length > 0 && (
-								<div style={{ marginBottom: 12 }}>
-									<label style={{ marginRight: 12 }}>
-										Type:{" "}
-										<select value={eventTypeFilter} onChange={(e) => setEventTypeFilter(e.target.value)}>
-											<option value="all">All</option>
-											{[...new Set(events.map((e) => e.type))].sort().map((t) => (
-												<option key={t} value={t}>
-													{t}
+
+						{/* FULL WIDTH: Events timeline */}
+						{selectedSessionId && (
+							<div
+								style={{
+									gridColumn: "1 / -1",
+									marginTop: 0,
+									padding: 12,
+									border: "1px solid #ddd",
+								}}
+							>
+								<h3>Events timeline</h3>
+
+								{!loadingEvents && !eventsError && events.length > 0 && (
+									<div style={{ marginBottom: 12 }}>
+										<label style={{ marginRight: 12 }}>
+											Type:{" "}
+											<select value={eventTypeFilter} onChange={(e) => setEventTypeFilter(e.target.value)}>
+												<option value="all">All</option>
+												{[...new Set(events.map((e) => e.type))].sort().map((t) => (
+													<option key={t} value={t}>
+														{t}
+													</option>
+												))}
+											</select>
+										</label>
+
+										<label>
+											Search: <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="path, element, value..." />
+										</label>
+
+										<div style={{ marginTop: 6 }}>
+											<small>
+												Showing {filteredEvents.length} / {events.length} events
+											</small>
+										</div>
+									</div>
+								)}
+
+								{loadingEvents && <p>Loading events...</p>}
+								{eventsError && <p style={{ color: "crimson" }}>Error: {eventsError}</p>}
+								{!loadingEvents && !eventsError && events.length === 0 && <p>No events found for this session.</p>}
+
+								{!loadingEvents && !eventsError && events.length > 0 && (
+									<table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+										<thead>
+											<tr>
+												<th>Time</th>
+												<th>Type</th>
+												<th>Path</th>
+												<th>Element</th>
+												<th>Value</th>
+												<th>Duration (ms)</th>
+											</tr>
+										</thead>
+										<tbody>
+											{filteredEvents.map((ev) => (
+												<tr key={ev.id}>
+													<td>{new Date(ev.created_at).toLocaleTimeString()}</td>
+													<td>{ev.type}</td>
+													<td>{ev.path}</td>
+													<td>{ev.element ?? "-"}</td>
+													<td>{ev.value ?? "-"}</td>
+													<td>{typeof ev.duration_ms === "number" ? ev.duration_ms : "-"}</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								)}
+							</div>
+						)}
+					</div>
+				)}
+
+				{viewMode === "user" && (
+					<div
+						style={{
+							display: "grid",
+							gridTemplateColumns: "1fr 1fr",
+							gap: 16,
+							alignItems: "start",
+						}}
+					>
+						{/* LEFT: User selector + user sessions */}
+						<div style={{ padding: 12, border: "1px solid #ddd" }}>
+							<h3>User detail</h3>
+
+							{loading && <p>Loading users...</p>}
+							{error && <p style={{ color: "crimson" }}>Error: {error}</p>}
+
+							{!loading && !error && (
+								<>
+									<label>
+										Select user:{" "}
+										<select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
+											{users.map((u) => (
+												<option key={u.id} value={u.id}>
+													{u.username} — {u.first_name} {u.last_name}
 												</option>
 											))}
 										</select>
 									</label>
 
-									<label>
-										Search: <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="path, element, value..." />
-									</label>
+									{selectedUser && (
+										<div style={{ marginTop: 16 }}>
+											<h4>User info</h4>
+											<ul>
+												<li>
+													<b>ID:</b> {selectedUser.id}
+												</li>
+												<li>
+													<b>Username:</b> {selectedUser.username}
+												</li>
+												<li>
+													<b>Name:</b> {selectedUser.first_name} {selectedUser.last_name}
+												</li>
+												<li>
+													<b>Email:</b> {selectedUser.email}
+												</li>
+											</ul>
+										</div>
+									)}
 
-									<div style={{ marginTop: 6 }}>
-										<small>
-											Showing {filteredEvents.length} / {events.length} events
-										</small>
-									</div>
-								</div>
-							)}
-							{loadingEvents && <p>Loading events...</p>}
-							{eventsError && <p style={{ color: "crimson" }}>Error: {eventsError}</p>}
+									{selectedUser && (
+										<div style={{ marginTop: 16 }}>
+											<h4>Sessions for this user</h4>
 
-							{!loadingEvents && !eventsError && events.length === 0 && <p>No events found for this session.</p>}
+											{loadingSessions && <p>Loading sessions...</p>}
+											{!loadingSessions && userSessions.length === 0 && <p>No sessions found for this user.</p>}
 
-							{!loadingEvents && !eventsError && events.length > 0 && (
-								<table border="1" cellPadding="6" style={{ borderCollapse: "collapse" }}>
-									<thead>
-										<tr>
-											<th>Time</th>
-											<th>Type</th>
-											<th>Path</th>
-											<th>Element</th>
-											<th>Value</th>
-											<th>Duration (ms)</th>
-										</tr>
-									</thead>
-									<tbody>
-										{filteredEvents.map((ev) => (
-											<tr key={ev.id}>
-												<td>{new Date(ev.created_at).toLocaleTimeString()}</td>
-												<td>{ev.type}</td>
-												<td>{ev.path}</td>
-												<td>{ev.element ?? "-"}</td>
-												<td>{ev.value ?? "-"}</td>
-												<td>{typeof ev.duration_ms === "number" ? ev.duration_ms : "-"}</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
+											{!loadingSessions && userSessions.length > 0 && (
+												<ul>
+													{userSessions.map((s) => (
+														<li key={s.session_id} style={{ marginBottom: 10 }}>
+															<button
+																onClick={() => setSelectedSessionId(s.session_id)}
+																style={{
+																	fontWeight: s.session_id === selectedSessionId ? "bold" : "normal",
+																	cursor: "pointer",
+																	marginBottom: 6,
+																}}
+															>
+																Select
+															</button>
+															<div>
+																<b>Session:</b> {s.session_id}
+															</div>
+															<div>
+																<small>
+																	{new Date(s.started_at).toLocaleString()} → {new Date(s.ended_at).toLocaleString()}
+																</small>
+															</div>
+															<div>
+																<small>
+																	Events: {s.event_count} | {s.device} · {s.browser}
+																</small>
+															</div>
+														</li>
+													))}
+												</ul>
+											)}
+										</div>
+									)}
+								</>
 							)}
 						</div>
-					)}
-				</>
-			)}
+
+						{/* RIGHT: Session profile */}
+						<div style={{ padding: 12, border: "1px solid #ddd" }}>
+							<h3>Session profile</h3>
+
+							{!selectedSessionId && <p>Select a session to see its profile.</p>}
+
+							{selectedSessionId && (
+								<>
+									<p>
+										<b>Selected session:</b> {selectedSessionId}
+									</p>
+
+									{loadingProfile && <p>Loading profile...</p>}
+									{profileError && <p style={{ color: "crimson" }}>Error: {profileError}</p>}
+
+									{!loadingProfile && !profileError && profile && (
+										<>
+											<h4>Labels</h4>
+											{profile.labels?.length ? (
+												<ul>
+													{profile.labels.map((l) => (
+														<li key={l}>{l}</li>
+													))}
+												</ul>
+											) : (
+												<p>No labels</p>
+											)}
+
+											<h4>Scores</h4>
+											<ul>
+												{Object.entries(profile.scores || {})
+													.filter(([k]) => k !== "labels")
+													.map(([k, v]) => (
+														<li key={k}>
+															<b>{k}:</b> {v}
+														</li>
+													))}
+											</ul>
+
+											<h4>Key metrics</h4>
+											<ul>
+												<li>
+													<b>totalEvents:</b> {profile.metrics?.totalEvents}
+												</li>
+												<li>
+													<b>timerStartCount:</b> {profile.metrics?.timerStartCount}
+												</li>
+												<li>
+													<b>timerCompleteCount:</b> {profile.metrics?.timerCompleteCount}
+												</li>
+												<li>
+													<b>taskCreateCount:</b> {profile.metrics?.taskCreateCount}
+												</li>
+												<li>
+													<b>taskCompleteCount:</b> {profile.metrics?.taskCompleteCount}
+												</li>
+												<li>
+													<b>tabBlurCount:</b> {profile.metrics?.tabBlurCount}
+												</li>
+												<li>
+													<b>avgTabBlurDurationMs:</b> {profile.metrics?.avgTabBlurDurationMs}
+												</li>
+											</ul>
+										</>
+									)}
+								</>
+							)}
+						</div>
+
+						{/* FULL WIDTH: Events timeline */}
+						{selectedSessionId && (
+							<div style={{ gridColumn: "1 / -1", padding: 12, border: "1px solid #ddd" }}>
+								<h3>Events timeline</h3>
+
+								{!loadingEvents && !eventsError && events.length > 0 && (
+									<div style={{ marginBottom: 12 }}>
+										<label style={{ marginRight: 12 }}>
+											Type:{" "}
+											<select value={eventTypeFilter} onChange={(e) => setEventTypeFilter(e.target.value)}>
+												<option value="all">All</option>
+												{[...new Set(events.map((e) => e.type))].sort().map((t) => (
+													<option key={t} value={t}>
+														{t}
+													</option>
+												))}
+											</select>
+										</label>
+
+										<label>
+											Search: <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="path, element, value..." />
+										</label>
+
+										<div style={{ marginTop: 6 }}>
+											<small>
+												Showing {filteredEvents.length} / {events.length} events
+											</small>
+										</div>
+									</div>
+								)}
+
+								{loadingEvents && <p>Loading events...</p>}
+								{eventsError && <p style={{ color: "crimson" }}>Error: {eventsError}</p>}
+								{!loadingEvents && !eventsError && events.length === 0 && <p>No events found for this session.</p>}
+
+								{!loadingEvents && !eventsError && events.length > 0 && (
+									<table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+										<thead>
+											<tr>
+												<th>Time</th>
+												<th>Type</th>
+												<th>Path</th>
+												<th>Element</th>
+												<th>Value</th>
+												<th>Duration (ms)</th>
+											</tr>
+										</thead>
+										<tbody>
+											{filteredEvents.map((ev) => (
+												<tr key={ev.id}>
+													<td>{new Date(ev.created_at).toLocaleTimeString()}</td>
+													<td>{ev.type}</td>
+													<td>{ev.path}</td>
+													<td>{ev.element ?? "-"}</td>
+													<td>{ev.value ?? "-"}</td>
+													<td>{typeof ev.duration_ms === "number" ? ev.duration_ms : "-"}</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								)}
+							</div>
+						)}
+					</div>
+				)}
+			</div>
 		</div>
 	);
 }
