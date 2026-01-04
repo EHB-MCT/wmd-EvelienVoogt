@@ -18,6 +18,10 @@ export default function AdminHome() {
 	const [eventsError, setEventsError] = useState("");
 	const [eventTypeFilter, setEventTypeFilter] = useState("all");
 	const [searchQuery, setSearchQuery] = useState("");
+	const [allSessions, setAllSessions] = useState([]);
+	const [labelsBySessionId, setLabelsBySessionId] = useState({}); // { [session_id]: ["Focused", ...] }
+	const [loadingOverview, setLoadingOverview] = useState(false);
+	const [overviewError, setOverviewError] = useState("");
 
 	useEffect(() => {
 		async function loadUsers() {
@@ -45,6 +49,7 @@ export default function AdminHome() {
 
 		loadUsers();
 	}, []);
+
 	useEffect(() => {
 		async function loadSessions() {
 			if (!selectedUserId) return;
@@ -68,7 +73,8 @@ export default function AdminHome() {
 	}, [selectedUserId]);
 
 	const selectedUser = users.find((u) => String(u.id) === String(selectedUserId));
-	const userSessions = sessions.filter((s) => String(s.user_id) === String(selectedUserId));
+	const userSessions = allSessions.filter((s) => String(s.user_id) === String(selectedUserId));
+
 	useEffect(() => {
 		if (userSessions.length > 0) {
 			setSelectedSessionId(userSessions[0].session_id);
@@ -76,7 +82,7 @@ export default function AdminHome() {
 			setSelectedSessionId("");
 			setProfile(null);
 		}
-	}, [selectedUserId, sessions]);
+	}, [selectedUserId, allSessions]);
 
 	useEffect(() => {
 		async function loadProfile() {
@@ -147,9 +153,114 @@ export default function AdminHome() {
 		return typeOk && searchOk;
 	});
 
+	useEffect(() => {
+		async function loadAllSessions() {
+			try {
+				setLoadingOverview(true);
+				setOverviewError("");
+
+				const res = await fetch(`${API_BASE}/api/admin/sessions`);
+				if (!res.ok) throw new Error(`Failed to load sessions (${res.status})`);
+
+				const data = await res.json();
+				setAllSessions(data.sessions || []);
+			} catch (e) {
+				console.error(e);
+				setOverviewError(e.message || "Failed to load sessions");
+				setAllSessions([]);
+			} finally {
+				setLoadingOverview(false);
+			}
+		}
+
+		loadAllSessions();
+	}, []);
+
+	useEffect(() => {
+		async function loadLabelsForSessions() {
+			if (!allSessions.length) return;
+
+			const missing = allSessions.map((s) => s.session_id).filter((id) => !labelsBySessionId[id]);
+
+			if (!missing.length) return;
+
+			try {
+				const batch = missing.slice(0, 50);
+
+				const results = await Promise.all(
+					batch.map(async (sessionId) => {
+						const res = await fetch(`${API_BASE}/api/admin/sessions/${sessionId}/profile`);
+						if (!res.ok) return [sessionId, []];
+
+						const data = await res.json();
+						return [sessionId, data.profile?.labels || []];
+					})
+				);
+
+				setLabelsBySessionId((prev) => {
+					const next = { ...prev };
+					for (const [sid, labels] of results) next[sid] = labels;
+					return next;
+				});
+			} catch (e) {
+				console.error(e);
+			}
+		}
+
+		loadLabelsForSessions();
+	}, [allSessions]);
+
+	const sessionCount = allSessions.length;
+
+	const avgEventCount = sessionCount === 0 ? 0 : Math.round(allSessions.reduce((sum, s) => sum + Number(s.event_count || 0), 0) / sessionCount);
+
+	const labelCounts = Object.entries(labelsBySessionId).reduce((acc, [, labels]) => {
+		(labels || []).forEach((l) => {
+			acc[l] = (acc[l] || 0) + 1;
+		});
+		return acc;
+	}, {});
+
 	return (
 		<div style={{ padding: 16 }}>
 			<h2>Admin dashboard</h2>
+			<div style={{ marginTop: 12, padding: 12, border: "1px solid #ddd" }}>
+				<h3>Overview</h3>
+
+				{loadingOverview && <p>Loading overview...</p>}
+				{overviewError && <p style={{ color: "crimson" }}>Error: {overviewError}</p>}
+
+				{!loadingOverview && !overviewError && (
+					<>
+						<ul>
+							<li>
+								<b>Total sessions:</b> {sessionCount}
+							</li>
+							<li>
+								<b>Average event_count:</b> {avgEventCount}
+							</li>
+						</ul>
+
+						<h4>Sessions per label</h4>
+
+						{Object.keys(labelCounts).length === 0 ? (
+							<p>
+								<small>Loading labels… (profiles are computed per session)</small>
+							</p>
+						) : (
+							<ul>
+								{Object.entries(labelCounts)
+									.sort((a, b) => b[1] - a[1])
+									.map(([label, count]) => (
+										<li key={label}>
+											<b>{label}:</b> {count}
+										</li>
+									))}
+							</ul>
+						)}
+					</>
+				)}
+			</div>
 
 			{loading && <p>Loading users...</p>}
 			{error && <p style={{ color: "crimson" }}>Error: {error}</p>}
