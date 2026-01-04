@@ -1,0 +1,5 @@
+/* User-specific theme overrides */
+body.user { --bg: #f6fff8; --surface: #ffffff; --text: #052012; --muted: #567d6b; --primary: #059669; }
+body.user header.site-header { background: var(--surface); }
+body.user .logo { color: var(--primary); }
+body.user .card { border: 1px solid rgba(5,150,105,0.04); }

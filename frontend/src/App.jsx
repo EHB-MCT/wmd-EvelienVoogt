@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import UserHome from "./user/pages/UserHome.jsx";
 import TimerPage from "./user/pages/TimerPage.jsx";
@@ -14,6 +14,8 @@ import PageViewTracker from "./lib/PageViewTracker.jsx";
 import IdleTracker from "./lib/IdleTracker.jsx";
 
 export default function App() {
+	const location = useLocation();
+
 	useEffect(() => {
 		console.log("App mounted");
 
@@ -70,12 +72,19 @@ export default function App() {
 		};
 	}, []);
 
+	useEffect(() => {
+		// Add a body class so CSS can target admin vs user themes
+		const isAdmin = location.pathname.startsWith("/admin");
+		document.body.classList.add(isAdmin ? "admin" : "user");
+		document.body.classList.remove(isAdmin ? "user" : "admin");
+	}, [location.pathname]);
+
 	return (
 		<AuthProvider>
-			<BrowserRouter>
-				<PageViewTracker />
-				<IdleTracker idleMs={30000} />
+			<PageViewTracker />
+			<IdleTracker idleMs={30000} />
 
+			<div className="app">
 				<Header />
 
 				<Routes>
@@ -86,7 +95,7 @@ export default function App() {
 					<Route path="/login" element={<LoginPage />} />
 					<Route path="/register" element={<RegisterPage />} />
 				</Routes>
-			</BrowserRouter>
+			</div>
 		</AuthProvider>
 	);
 }

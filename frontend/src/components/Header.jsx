@@ -12,12 +12,12 @@ export default function Header() {
 	};
 
 	return (
-		<header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+		<header className="site-header">
 			<div>
-				<Link to="/">FocusFlow</Link>
+				<Link to="/" className="logo">FocusFlow</Link>
 			</div>
 
-			<nav>
+			<nav className="main-nav">
 				<Link to="/">Home</Link> | <Link to="/timer">Timer</Link> | <Link to="/tasks">Tasks</Link>
 				{user && user.is_admin && (
 					<span>
@@ -29,16 +29,16 @@ export default function Header() {
 			<div>
 				{user ? (
 					<>
-						<span style={{ marginRight: 8 }}>Hi, {user.first_name || user.username}</span>
-						<button onClick={onLogout}>Log out</button>
+						<span className="greeting">Hi, {user.first_name || user.username}</span>
+						<button className="btn" onClick={onLogout}>Log out</button>
 					</>
 				) : (
 					<>
-						<Link to="/login" style={{ marginRight: 8 }}>
-							<button>Log in</button>
+						<Link to="/login" className="auth-link">
+							<button className="btn secondary">Log in</button>
 						</Link>
 						<Link to="/register">
-							<button>Register</button>
+							<button className="btn">Register</button>
 						</Link>
 					</>
 				)}
