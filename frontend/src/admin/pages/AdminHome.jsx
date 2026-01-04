@@ -13,26 +13,31 @@ export default function AdminHome() {
 	const [selectedUserId, setSelectedUserId] = useState("");
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
-	const [sessions, setSessions] = useState([]);
+
+	const [sessions, setSessions] = useState([]); // (optioneel) als je ze ooit apart wil tonen
 	const [loadingSessions, setLoadingSessions] = useState(false);
+
 	const [selectedSessionId, setSelectedSessionId] = useState("");
 	const [profile, setProfile] = useState(null);
 	const [loadingProfile, setLoadingProfile] = useState(false);
 	const [profileError, setProfileError] = useState("");
+
 	const [events, setEvents] = useState([]);
 	const [loadingEvents, setLoadingEvents] = useState(false);
 	const [eventsError, setEventsError] = useState("");
 	const [eventTypeFilter, setEventTypeFilter] = useState("all");
 	const [searchQuery, setSearchQuery] = useState("");
+
 	const [allSessions, setAllSessions] = useState([]);
 	const [labelsBySessionId, setLabelsBySessionId] = useState({}); // { [session_id]: ["Focused", ...] }
 	const [loadingOverview, setLoadingOverview] = useState(false);
 	const [overviewError, setOverviewError] = useState("");
 	const [globalLabelFilter, setGlobalLabelFilter] = useState("all");
+
 	const [viewMode, setViewMode] = useState("overview"); // "overview" | "user"
 
+	// protect + load users
 	useEffect(() => {
-		// protect client-side: if not admin redirect away
 		if (!auth || (!auth.loading && !auth.user?.is_admin)) {
 			nav("/");
 			return;
@@ -44,7 +49,9 @@ export default function AdminHome() {
 				setError("");
 
 				const token = getAuthToken();
-				const res = await fetch(`${API_BASE}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } });
+				const res = await fetch(`${API_BASE}/api/admin/users`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
 				if (!res.ok) throw new Error(`Failed to load users (${res.status})`);
 
 				const data = await res.json();
@@ -52,7 +59,6 @@ export default function AdminHome() {
 
 				setUsers(list);
 
-				// auto-select first user
 				if (list.length > 0) setSelectedUserId(String(list[0].id));
 			} catch (e) {
 				console.error(e);
@@ -63,8 +69,10 @@ export default function AdminHome() {
 		}
 
 		loadUsers();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	// Load sessions (for user detail) - store in allSessions so userSessions works
 	useEffect(() => {
 		async function loadSessions() {
 			if (!selectedUserId) return;
@@ -73,10 +81,17 @@ export default function AdminHome() {
 				setLoadingSessions(true);
 
 				const token = getAuthToken();
-				const res = await fetch(`${API_BASE}/api/admin/sessions`, { headers: { Authorization: `Bearer ${token}` } });
+				const res = await fetch(`${API_BASE}/api/admin/sessions`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
 				if (!res.ok) throw new Error("Failed to load sessions");
 
 				const data = await res.json();
+
+				// ✅ needed for userSessions (since userSessions uses allSessions)
+				setAllSessions(data.sessions || []);
+
+				// (optioneel) laat ook in sessions zitten als je die later wil gebruiken
 				setSessions(data.sessions || []);
 			} catch (e) {
 				console.error(e);
@@ -91,6 +106,7 @@ export default function AdminHome() {
 	const selectedUser = users.find((u) => String(u.id) === String(selectedUserId));
 	const userSessions = allSessions.filter((s) => String(s.user_id) === String(selectedUserId));
 
+	// when selected user changes or sessions reload, pick first session
 	useEffect(() => {
 		if (userSessions.length > 0) {
 			setSelectedSessionId(userSessions[0].session_id);
@@ -98,8 +114,10 @@ export default function AdminHome() {
 			setSelectedSessionId("");
 			setProfile(null);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedUserId, allSessions]);
 
+	// load profile for selected session
 	useEffect(() => {
 		async function loadProfile() {
 			if (!selectedSessionId) return;
@@ -109,7 +127,9 @@ export default function AdminHome() {
 				setProfileError("");
 
 				const token = getAuthToken();
-				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/profile`, { headers: { Authorization: `Bearer ${token}` } });
+				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/profile`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
 				if (!res.ok) throw new Error(`Failed to load profile (${res.status})`);
 
 				const data = await res.json();
@@ -126,6 +146,7 @@ export default function AdminHome() {
 		loadProfile();
 	}, [selectedSessionId]);
 
+	// load events for selected session
 	useEffect(() => {
 		async function loadEvents() {
 			if (!selectedSessionId) return;
@@ -135,7 +156,9 @@ export default function AdminHome() {
 				setEventsError("");
 
 				const token = getAuthToken();
-				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/events`, { headers: { Authorization: `Bearer ${token}` } });
+				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/events`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
 				if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
 
 				const data = await res.json();
@@ -152,6 +175,7 @@ export default function AdminHome() {
 		loadEvents();
 	}, [selectedSessionId]);
 
+	// reset filters when session changes
 	useEffect(() => {
 		setEventTypeFilter("all");
 		setSearchQuery("");
@@ -160,17 +184,13 @@ export default function AdminHome() {
 	const normalizedQuery = searchQuery.trim().toLowerCase();
 
 	const filteredEvents = events.filter((ev) => {
-		// 1) type filter
 		const typeOk = eventTypeFilter === "all" || ev.type === eventTypeFilter;
-
-		// 2) search filter (path, element, value)
 		const haystack = [ev.path ?? "", ev.element ?? "", ev.value ?? ""].join(" ").toLowerCase();
-
 		const searchOk = !normalizedQuery || haystack.includes(normalizedQuery);
-
 		return typeOk && searchOk;
 	});
 
+	// load all sessions for overview (once)
 	useEffect(() => {
 		async function loadAllSessions() {
 			try {
@@ -178,7 +198,9 @@ export default function AdminHome() {
 				setOverviewError("");
 
 				const token = getAuthToken();
-				const res = await fetch(`${API_BASE}/api/admin/sessions`, { headers: { Authorization: `Bearer ${token}` } });
+				const res = await fetch(`${API_BASE}/api/admin/sessions`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
 				if (!res.ok) throw new Error(`Failed to load sessions (${res.status})`);
 
 				const data = await res.json();
@@ -195,22 +217,23 @@ export default function AdminHome() {
 		loadAllSessions();
 	}, []);
 
+	// load labels for sessions (batch)
 	useEffect(() => {
 		async function loadLabelsForSessions() {
 			if (!allSessions.length) return;
 
 			const missing = allSessions.map((s) => s.session_id).filter((id) => !labelsBySessionId[id]);
-
 			if (!missing.length) return;
 
 			try {
 				const batch = missing.slice(0, 50);
-
 				const token = getAuthToken();
 
 				const results = await Promise.all(
 					batch.map(async (sessionId) => {
-						const res = await fetch(`${API_BASE}/api/admin/sessions/${sessionId}/profile`, { headers: { Authorization: `Bearer ${token}` } });
+						const res = await fetch(`${API_BASE}/api/admin/sessions/${sessionId}/profile`, {
+							headers: { Authorization: `Bearer ${token}` },
+						});
 						if (!res.ok) return [sessionId, []];
 
 						const data = await res.json();
@@ -229,10 +252,12 @@ export default function AdminHome() {
 		}
 
 		loadLabelsForSessions();
-	}, [allSessions]);
+	}, [allSessions, labelsBySessionId]);
 
+	// jump to first session matching global label filter
 	useEffect(() => {
 		if (globalLabelFilter === "all") return;
+
 		const first = allSessions.find((s) => {
 			const labels = labelsBySessionId[s.session_id] || [];
 			return labels.includes(globalLabelFilter);
@@ -242,7 +267,10 @@ export default function AdminHome() {
 
 	const sessionCount = allSessions.length;
 
-	const avgEventCount = sessionCount === 0 ? 0 : Math.round(allSessions.reduce((sum, s) => sum + Number(s.event_count || 0), 0) / sessionCount);
+	const avgEventCount =
+		sessionCount === 0
+			? 0
+			: Math.round(allSessions.reduce((sum, s) => sum + Number(s.event_count || 0), 0) / sessionCount);
 
 	const labelCounts = Object.entries(labelsBySessionId).reduce((acc, [, labels]) => {
 		(labels || []).forEach((l) => {
@@ -260,6 +288,7 @@ export default function AdminHome() {
 	return (
 		<div style={{ padding: 16 }}>
 			<h2>Admin dashboard</h2>
+
 			<div style={{ marginBottom: 12 }}>
 				<button
 					onClick={() => setViewMode("overview")}
@@ -286,20 +315,13 @@ export default function AdminHome() {
 			<div
 				style={{
 					display: "grid",
-					gridTemplateColumns: "1fr 1.2fr",
+					gridTemplateColumns: "1fr 1fr",
 					gap: 16,
 					alignItems: "start",
 				}}
 			>
 				{viewMode === "overview" && (
-					<div
-						style={{
-							display: "grid",
-							gridTemplateColumns: "1fr 1fr",
-							gap: 16,
-							alignItems: "start",
-						}}
-					>
+					<>
 						{/* LEFT: Overview + All sessions */}
 						<div>
 							<div style={{ marginTop: 12, padding: 12, border: "1px solid #ddd" }}>
@@ -331,7 +353,10 @@ export default function AdminHome() {
 													.sort((a, b) => b[1] - a[1])
 													.map(([label, count]) => (
 														<li key={label}>
-															<button onClick={() => setGlobalLabelFilter(label)} style={{ cursor: "pointer", marginRight: 8 }}>
+															<button
+																onClick={() => setGlobalLabelFilter(label)}
+																style={{ cursor: "pointer", marginRight: 8 }}
+															>
 																Show sessions
 															</button>
 															<b>{label}:</b> {count}
@@ -343,7 +368,8 @@ export default function AdminHome() {
 										{globalLabelFilter !== "all" && (
 											<p>
 												<small>
-													Active label filter: <b>{globalLabelFilter}</b> <button onClick={() => setGlobalLabelFilter("all")}>Clear</button>
+													Active label filter: <b>{globalLabelFilter}</b>{" "}
+													<button onClick={() => setGlobalLabelFilter("all")}>Clear</button>
 												</small>
 											</p>
 										)}
@@ -370,7 +396,10 @@ export default function AdminHome() {
 											const labels = labelsBySessionId[s.session_id] || [];
 											return (
 												<li key={s.session_id} style={{ marginBottom: 10 }}>
-													<button onClick={() => setSelectedSessionId(s.session_id)} style={{ cursor: "pointer", marginRight: 8 }}>
+													<button
+														onClick={() => setSelectedSessionId(s.session_id)}
+														style={{ cursor: "pointer", marginRight: 8 }}
+													>
 														Open
 													</button>
 													<b>{s.session_id}</b> — {s.username} ({s.email}) — events: {s.event_count}
@@ -474,16 +503,23 @@ export default function AdminHome() {
 											Type:{" "}
 											<select value={eventTypeFilter} onChange={(e) => setEventTypeFilter(e.target.value)}>
 												<option value="all">All</option>
-												{[...new Set(events.map((e) => e.type))].sort().map((t) => (
-													<option key={t} value={t}>
-														{t}
-													</option>
-												))}
+												{[...new Set(events.map((e) => e.type))]
+													.sort()
+													.map((t) => (
+														<option key={t} value={t}>
+															{t}
+														</option>
+													))}
 											</select>
 										</label>
 
 										<label>
-											Search: <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="path, element, value..." />
+											Search:{" "}
+											<input
+												value={searchQuery}
+												onChange={(e) => setSearchQuery(e.target.value)}
+												placeholder="path, element, value..."
+											/>
 										</label>
 
 										<div style={{ marginTop: 6 }}>
@@ -520,7 +556,9 @@ export default function AdminHome() {
 													<td>{ev.element ?? "-"}</td>
 													<td>{ev.value ?? "-"}</td>
 													<td>{typeof ev.duration_ms === "number" ? ev.duration_ms : "-"}</td>
-													<td style={{ maxWidth: 420, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{ev.metadata ? JSON.stringify(ev.metadata, null, 2) : "-"}</td>
+													<td style={{ maxWidth: 420, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+														{ev.metadata ? JSON.stringify(ev.metadata, null, 2) : "-"}
+													</td>
 												</tr>
 											))}
 										</tbody>
@@ -528,12 +566,13 @@ export default function AdminHome() {
 								)}
 							</div>
 						)}
-					</div>
+					</>
 				)}
 
 				{viewMode === "user" && (
 					<div
 						style={{
+							gridColumn: "1 / -1",
 							display: "grid",
 							gridTemplateColumns: "1fr 1fr",
 							gap: 16,
@@ -606,7 +645,8 @@ export default function AdminHome() {
 															</div>
 															<div>
 																<small>
-																	{new Date(s.started_at).toLocaleString()} → {new Date(s.ended_at).toLocaleString()}
+																	{new Date(s.started_at).toLocaleString()} →{" "}
+																	{new Date(s.ended_at).toLocaleString()}
 																</small>
 															</div>
 															<div>
@@ -704,16 +744,23 @@ export default function AdminHome() {
 											Type:{" "}
 											<select value={eventTypeFilter} onChange={(e) => setEventTypeFilter(e.target.value)}>
 												<option value="all">All</option>
-												{[...new Set(events.map((e) => e.type))].sort().map((t) => (
-													<option key={t} value={t}>
-														{t}
-													</option>
-												))}
+												{[...new Set(events.map((e) => e.type))]
+													.sort()
+													.map((t) => (
+														<option key={t} value={t}>
+															{t}
+															</option>
+													))}
 											</select>
 										</label>
 
 										<label>
-											Search: <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="path, element, value..." />
+											Search:{" "}
+											<input
+												value={searchQuery}
+												onChange={(e) => setSearchQuery(e.target.value)}
+												placeholder="path, element, value..."
+											/>
 										</label>
 
 										<div style={{ marginTop: 6 }}>

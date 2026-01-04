@@ -135,7 +135,7 @@ export default function TasksPage() {
 	}, []);
 
 	return (
-		<div>
+		<div className="page-content">
 			<h3>Tasks</h3>
 			{tip && (
 				<div className="hint-banner">
@@ -150,7 +150,6 @@ export default function TasksPage() {
 			<ul>
 				{tasks.map((t) => (
 					<li key={t.id}>
-						<button onClick={() => toggleTask(t)}>{t.done ? "Undo" : "Done"}</button>{" "}
 						{editingTaskId === t.id ? (
 							<input
 								value={editValue}
@@ -167,7 +166,7 @@ export default function TasksPage() {
 								{t.done ? <s>{t.title}</s> : t.title}
 							</span>
 						)}{" "}
-						<button onClick={() => deleteTask(t)}>Delete</button>
+						<button onClick={() => toggleTask(t)}>{t.done ? "Undo" : "Done"}</button> <button onClick={() => deleteTask(t)}>Delete</button>
 					</li>
 				))}
 			</ul>

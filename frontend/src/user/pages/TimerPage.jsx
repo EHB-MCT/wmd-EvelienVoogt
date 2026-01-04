@@ -141,7 +141,7 @@ export default function TimerPage() {
 	}, []);
 
 	return (
-		<div style={{ padding: 16 }}>
+		<div className="page-content">
 			<h2>Timer</h2>
 			{tip && (
 				<div className="hint-banner">
@@ -149,23 +149,23 @@ export default function TimerPage() {
 				</div>
 			)}
 
-			<p>
-				<small>Simple controls for now — later we add a real countdown.</small>
-			</p>
-
-			<div style={{ marginBottom: 8 }}>
-				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-					<div style={{ fontSize: 28, fontFamily: "monospace" }}>{pad(h)}</div>
-					<div style={{ fontSize: 20 }}>:</div>
-					<div style={{ fontSize: 28, fontFamily: "monospace" }}>{pad(m)}</div>
-					<div style={{ fontSize: 20 }}>:</div>
-					<div style={{ fontSize: 28, fontFamily: "monospace" }}>{pad(s)}</div>
-				</div>
-				<div style={{ display: "flex", gap: 32, marginTop: 4 }}>
-					<small>H</small>
-					<small>M</small>
-					<small>S</small>
-					<div style={{ marginLeft: 16 }}>
+			<div className="timer-block" style={{ marginBottom: 8 }}>
+				<div className="timer-display">
+					<div className="time-segment">
+						<div className="time-value">{pad(h)}</div>
+						<div className="time-label">H</div>
+					</div>
+					<div className="colon">:</div>
+					<div className="time-segment">
+						<div className="time-value">{pad(m)}</div>
+						<div className="time-label">M</div>
+					</div>
+					<div className="colon">:</div>
+					<div className="time-segment">
+						<div className="time-value">{pad(s)}</div>
+						<div className="time-label">S</div>
+					</div>
+					<div className="timer-status" style={{ marginLeft: 16 }}>
 						<small>{running ? "Running" : elapsed > 0 ? "Paused" : "Idle"}</small>
 					</div>
 				</div>

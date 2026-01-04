@@ -19,9 +19,9 @@ export default function UserHome() {
 	};
 
 	return (
-		<div style={{ padding: 24, maxWidth: 720, margin: "0 auto" }}>
-			<header style={{ marginBottom: 24 }}>
-				<h1 style={{ margin: 0 }}>FocusFlow</h1>
+		<div className="page-content user-home">
+			<header>
+				<h1>FocusFlow</h1>
 				<p style={{ marginTop: 8, fontSize: 16, lineHeight: 1.5 }}>Focus in korte blokken. Houd je taken simpel. En laat je sessie-data je subtiel helpen.</p>
 				<p style={{ marginTop: 6 }}>
 					<small>Maak een profiel voor gepersonaliseerde ervaringen.</small>
