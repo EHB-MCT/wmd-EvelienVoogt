@@ -117,6 +117,13 @@ export default function TasksPage() {
 				setProfileError("");
 
 				await mgrRef.current.load();
+				const dominant = mgrRef.current.getDominantLabel();
+				const cls = dominant ? `profile-${dominant.toLowerCase().replace(/\s+/g, "-")}` : "profile-default";
+
+				document.body.classList.forEach((c) => {
+					if (c.startsWith("profile-")) document.body.classList.remove(c);
+				});
+				document.body.classList.add(cls);
 
 				const nextLabels = mgrRef.current.getLabels();
 				setLabels(nextLabels);

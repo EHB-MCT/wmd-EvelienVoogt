@@ -15,3 +15,52 @@ body.user .logo {
 body.user .card {
 	border: 1px solid rgba(5, 150, 105, 0.04);
 }
+
+
+/* =========================================================
+   Profiling-based UI adjustments (dominant session label)
+   These changes are subtle and non-intrusive.
+   They rely on CSS variables to avoid layout shifts.
+   ========================================================= */
+
+/* Distracted
+   Goal: reduce visual noise and gently emphasize primary actions */
+body.user.profile-distracted {
+  --bg: #f3f7ff;                 /* soft blue background for calm */
+  --primary: #2563eb;            /* trustworthy blue accent */
+  --hint-bg: rgba(37, 99, 235, 0.12);
+  --btn-scale: 1.08;             /* clearly larger buttons */
+}
+
+/* Low Engagement
+   Goal: feel more inviting and lower the activation threshold */
+body.user.profile-low-engagement {
+  --bg: #f7fbff;
+  --primary: #0ea5a6;             /* warm turquoise */
+  --hint-bg: rgba(14, 165, 166, 0.14);
+  --btn-scale: 1.1;               /* strongest emphasis */
+}
+
+/* Indecisive
+   Goal: reduce pressure and visual dominance */
+body.user.profile-indecisive {
+  --bg: #f6f8fb;
+  --hint-bg: rgba(124, 58, 237, 0.1);
+  --btn-scale: 0.96;              /* slightly smaller */
+}
+
+/* Procrastinator
+   Goal: gently push towards action without urgency */
+body.user.profile-procrastinator {
+  --bg: #f6f8fb;
+  --hint-bg: rgba(239, 68, 68, 0.08); /* soft red, not alarming */
+  --btn-scale: 1.12;                  /* very noticeable CTA */
+}
+
+/* Focused
+   Goal: stay calm and unobtrusive */
+body.user.profile-focused {
+  --bg: #f6fff8;
+  --hint-bg: rgba(5, 150, 105, 0.1);
+  --btn-scale: 1;
+}
