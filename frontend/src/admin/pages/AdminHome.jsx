@@ -16,6 +16,8 @@ export default function AdminHome() {
 	const [events, setEvents] = useState([]);
 	const [loadingEvents, setLoadingEvents] = useState(false);
 	const [eventsError, setEventsError] = useState("");
+	const [eventTypeFilter, setEventTypeFilter] = useState("all");
+	const [searchQuery, setSearchQuery] = useState("");
 
 	useEffect(() => {
 		async function loadUsers() {
@@ -101,32 +103,49 @@ export default function AdminHome() {
 		loadProfile();
 	}, [selectedSessionId]);
 
-    useEffect(() => {
-  async function loadEvents() {
-    if (!selectedSessionId) return;
+	useEffect(() => {
+		async function loadEvents() {
+			if (!selectedSessionId) return;
 
-    try {
-      setLoadingEvents(true);
-      setEventsError("");
+			try {
+				setLoadingEvents(true);
+				setEventsError("");
 
-      const res = await fetch(
-        `${API_BASE}/api/admin/sessions/${selectedSessionId}/events`
-      );
-      if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
+				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/events`);
+				if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
 
-      const data = await res.json();
-      setEvents(data.events || []);
-    } catch (e) {
-      console.error(e);
-      setEventsError(e.message || "Failed to load events");
-      setEvents([]);
-    } finally {
-      setLoadingEvents(false);
-    }
-  }
+				const data = await res.json();
+				setEvents(data.events || []);
+			} catch (e) {
+				console.error(e);
+				setEventsError(e.message || "Failed to load events");
+				setEvents([]);
+			} finally {
+				setLoadingEvents(false);
+			}
+		}
 
-  loadEvents();
-}, [selectedSessionId]);
+		loadEvents();
+	}, [selectedSessionId]);
+
+	useEffect(() => {
+		setEventTypeFilter("all");
+		setSearchQuery("");
+	}, [selectedSessionId]);
+
+	const normalizedQuery = searchQuery.trim().toLowerCase();
+
+	const filteredEvents = events.filter((ev) => {
+		// 1) type filter
+		const typeOk = eventTypeFilter === "all" || ev.type === eventTypeFilter;
+
+		// 2) search filter (path, element, value)
+		const haystack = [ev.path ?? "", ev.element ?? "", ev.value ?? ""].join(" ").toLowerCase();
+
+		const searchOk = !normalizedQuery || haystack.includes(normalizedQuery);
+
+		return typeOk && searchOk;
+	});
 
 	return (
 		<div style={{ padding: 16 }}>
@@ -270,46 +289,67 @@ export default function AdminHome() {
 							)}
 						</div>
 					)}
-                    {selectedSessionId && (
-  <div style={{ marginTop: 24 }}>
-    <h3>Events timeline</h3>
+					{selectedSessionId && (
+						<div style={{ marginTop: 24 }}>
+							<h3>Events timeline</h3>
+							{!loadingEvents && !eventsError && events.length > 0 && (
+								<div style={{ marginBottom: 12 }}>
+									<label style={{ marginRight: 12 }}>
+										Type:{" "}
+										<select value={eventTypeFilter} onChange={(e) => setEventTypeFilter(e.target.value)}>
+											<option value="all">All</option>
+											{[...new Set(events.map((e) => e.type))].sort().map((t) => (
+												<option key={t} value={t}>
+													{t}
+												</option>
+											))}
+										</select>
+									</label>
 
-    {loadingEvents && <p>Loading events...</p>}
-    {eventsError && <p style={{ color: "crimson" }}>Error: {eventsError}</p>}
+									<label>
+										Search: <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="path, element, value..." />
+									</label>
 
-    {!loadingEvents && !eventsError && events.length === 0 && (
-      <p>No events found for this session.</p>
-    )}
+									<div style={{ marginTop: 6 }}>
+										<small>
+											Showing {filteredEvents.length} / {events.length} events
+										</small>
+									</div>
+								</div>
+							)}
+							{loadingEvents && <p>Loading events...</p>}
+							{eventsError && <p style={{ color: "crimson" }}>Error: {eventsError}</p>}
 
-    {!loadingEvents && !eventsError && events.length > 0 && (
-      <table border="1" cellPadding="6" style={{ borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Type</th>
-            <th>Path</th>
-            <th>Element</th>
-            <th>Value</th>
-            <th>Duration (ms)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {events.map((ev) => (
-            <tr key={ev.id}>
-              <td>{new Date(ev.created_at).toLocaleTimeString()}</td>
-              <td>{ev.type}</td>
-              <td>{ev.path}</td>
-              <td>{ev.element ?? "-"}</td>
-              <td>{ev.value ?? "-"}</td>
-              <td>{typeof ev.duration_ms === "number" ? ev.duration_ms : "-"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )}
-  </div>
-)}
+							{!loadingEvents && !eventsError && events.length === 0 && <p>No events found for this session.</p>}
 
+							{!loadingEvents && !eventsError && events.length > 0 && (
+								<table border="1" cellPadding="6" style={{ borderCollapse: "collapse" }}>
+									<thead>
+										<tr>
+											<th>Time</th>
+											<th>Type</th>
+											<th>Path</th>
+											<th>Element</th>
+											<th>Value</th>
+											<th>Duration (ms)</th>
+										</tr>
+									</thead>
+									<tbody>
+										{filteredEvents.map((ev) => (
+											<tr key={ev.id}>
+												<td>{new Date(ev.created_at).toLocaleTimeString()}</td>
+												<td>{ev.type}</td>
+												<td>{ev.path}</td>
+												<td>{ev.element ?? "-"}</td>
+												<td>{ev.value ?? "-"}</td>
+												<td>{typeof ev.duration_ms === "number" ? ev.duration_ms : "-"}</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							)}
+						</div>
+					)}
 				</>
 			)}
 		</div>
