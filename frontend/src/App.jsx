@@ -1,13 +1,21 @@
 import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import UserHome from "./user/pages/UserHome.jsx";
+import TimerPage from "./user/pages/TimerPage.jsx";
+import TasksPage from "./user/pages/TasksPage.jsx";
 import AdminHome from "./admin/pages/AdminHome.jsx";
+import LoginPage from "./user/pages/LoginPage.jsx";
+import RegisterPage from "./user/pages/RegisterPage.jsx";
+import Header from "./components/Header.jsx";
+import { AuthProvider } from "./lib/AuthProvider";
 import { startSessionOnce, trackEvent } from "./lib/tracking.js";
 import PageViewTracker from "./lib/PageViewTracker.jsx";
 import IdleTracker from "./lib/IdleTracker.jsx";
 
 export default function App() {
+	const location = useLocation();
+
 	useEffect(() => {
 		console.log("App mounted");
 
@@ -64,19 +72,30 @@ export default function App() {
 		};
 	}, []);
 
+	useEffect(() => {
+		// Add a body class so CSS can target admin vs user themes
+		const isAdmin = location.pathname.startsWith("/admin");
+		document.body.classList.add(isAdmin ? "admin" : "user");
+		document.body.classList.remove(isAdmin ? "user" : "admin");
+	}, [location.pathname]);
+
 	return (
-		<BrowserRouter>
-			<PageViewTracker />
+		<AuthProvider>
 			<PageViewTracker />
 			<IdleTracker idleMs={30000} />
-			<nav style={{ marginBottom: 16 }}>
-				<Link to="/">User</Link> | <Link to="/admin">Admin</Link>
-			</nav>
 
-			<Routes>
-				<Route path="/" element={<UserHome />} />
-				<Route path="/admin" element={<AdminHome />} />
-			</Routes>
-		</BrowserRouter>
+			<div className="app">
+				<Header />
+
+				<Routes>
+					<Route path="/" element={<UserHome />} />
+					<Route path="/timer" element={<TimerPage />} />
+					<Route path="/tasks" element={<TasksPage />} />
+					<Route path="/admin" element={<AdminHome />} />
+					<Route path="/login" element={<LoginPage />} />
+					<Route path="/register" element={<RegisterPage />} />
+				</Routes>
+			</div>
+		</AuthProvider>
 	);
 }

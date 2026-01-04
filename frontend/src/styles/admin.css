@@ -1,0 +1,22 @@
+/* Admin-specific theme overrides */
+body.admin {
+	--bg: #0f172a;
+	--surface: #071029;
+	--text: #e6eef8;
+	--muted: #9fb3d8;
+	--primary: #7c3aed;
+}
+body.admin header.site-header {
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.03);
+}
+body.admin .card {
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.02);
+}
+body.admin .logo {
+	color: var(--primary);
+}
+body.admin nav.main-nav a {
+	color: var(--muted);
+}
