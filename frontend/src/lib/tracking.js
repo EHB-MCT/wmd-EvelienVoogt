@@ -1,6 +1,6 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 let sessionStartedAt = null;
-import { getDeviceInfo } from "../../lib/deviceInfo";
+import { getDeviceInfo } from "./getDeviceInfo";
 
 export function getSessionId() {
 	return localStorage.getItem("session_id");
