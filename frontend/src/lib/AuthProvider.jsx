@@ -20,10 +20,10 @@ export function AuthProvider({ children }) {
 			return;
 		}
 
-		// We don't have a /me endpoint; decode basic payload from token (unsafe but fine for UI)
+		// Decode basic payload from token (unsafe but acceptable for UI state)
 		try {
 			const payload = JSON.parse(atob(token.split(".")[1]));
-			setUser({ id: payload.user_id, username: payload.username });
+			setUser({ id: payload.user_id, username: payload.username, is_admin: !!payload.is_admin });
 		} catch (err) {
 			// invalid token — clear it
 			setAuthToken(null);
@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
 
 	async function register(info) {
 		const user = await apiRegister(info);
-		// After register we don't automatically log in — require explicit login
+		// After register we don't automatically log in — require explicit login (optional page handles auto-login)
 		return user;
 	}
 

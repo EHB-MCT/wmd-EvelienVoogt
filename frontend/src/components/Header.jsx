@@ -19,8 +19,13 @@ export default function Header() {
 
 			<nav>
 				<Link to="/">Home</Link> | <Link to="/timer">Timer</Link> | <Link to="/tasks">Tasks</Link>
+				{user && user.is_admin && (
+					<span>
+						{" "}
+						| <Link to="/admin">Admin</Link>
+					</span>
+				)}{" "}
 			</nav>
-
 			<div>
 				{user ? (
 					<>

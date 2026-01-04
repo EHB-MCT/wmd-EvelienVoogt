@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../lib/AuthProvider";
+import { useNavigate } from "react-router-dom";
+import { getAuthToken } from "../../lib/auth";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export default function AdminHome() {
+	const auth = useAuth();
+	const nav = useNavigate();
+
 	const [users, setUsers] = useState([]);
 	const [selectedUserId, setSelectedUserId] = useState("");
 	const [loading, setLoading] = useState(true);
@@ -26,12 +32,19 @@ export default function AdminHome() {
 	const [viewMode, setViewMode] = useState("overview"); // "overview" | "user"
 
 	useEffect(() => {
+		// protect client-side: if not admin redirect away
+		if (!auth || (!auth.loading && !auth.user?.is_admin)) {
+			nav("/");
+			return;
+		}
+
 		async function loadUsers() {
 			try {
 				setLoading(true);
 				setError("");
 
-				const res = await fetch(`${API_BASE}/api/admin/users`);
+				const token = getAuthToken();
+				const res = await fetch(`${API_BASE}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } });
 				if (!res.ok) throw new Error(`Failed to load users (${res.status})`);
 
 				const data = await res.json();
@@ -59,7 +72,8 @@ export default function AdminHome() {
 			try {
 				setLoadingSessions(true);
 
-				const res = await fetch(`${API_BASE}/api/admin/sessions`);
+				const token = getAuthToken();
+				const res = await fetch(`${API_BASE}/api/admin/sessions`, { headers: { Authorization: `Bearer ${token}` } });
 				if (!res.ok) throw new Error("Failed to load sessions");
 
 				const data = await res.json();
@@ -94,7 +108,8 @@ export default function AdminHome() {
 				setLoadingProfile(true);
 				setProfileError("");
 
-				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/profile`);
+				const token = getAuthToken();
+				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/profile`, { headers: { Authorization: `Bearer ${token}` } });
 				if (!res.ok) throw new Error(`Failed to load profile (${res.status})`);
 
 				const data = await res.json();
@@ -119,7 +134,8 @@ export default function AdminHome() {
 				setLoadingEvents(true);
 				setEventsError("");
 
-				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/events`);
+				const token = getAuthToken();
+				const res = await fetch(`${API_BASE}/api/admin/sessions/${selectedSessionId}/events`, { headers: { Authorization: `Bearer ${token}` } });
 				if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
 
 				const data = await res.json();
@@ -161,7 +177,8 @@ export default function AdminHome() {
 				setLoadingOverview(true);
 				setOverviewError("");
 
-				const res = await fetch(`${API_BASE}/api/admin/sessions`);
+				const token = getAuthToken();
+				const res = await fetch(`${API_BASE}/api/admin/sessions`, { headers: { Authorization: `Bearer ${token}` } });
 				if (!res.ok) throw new Error(`Failed to load sessions (${res.status})`);
 
 				const data = await res.json();

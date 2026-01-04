@@ -35,7 +35,7 @@ async function register(req, res) {
 				last_name: last_name ?? null,
 				password_hash,
 			})
-			.returning(["id", "username", "email", "first_name", "last_name", "created_at"]);
+			.returning(["id", "username", "email", "first_name", "last_name", "created_at", "is_admin"]);
 
 		return res.status(201).json({ user });
 	} catch (err) {
@@ -57,7 +57,7 @@ async function login(req, res) {
 	const cleanUsername = username.trim();
 
 	try {
-		const user = await knex("users").select("id", "username", "email", "first_name", "last_name", "password_hash").where({ username: cleanUsername }).first();
+		const user = await knex("users").select("id", "username", "email", "first_name", "last_name", "is_admin", "password_hash").where({ username: cleanUsername }).first();
 
 		if (!user) {
 			return res.status(401).json({ error: "invalid_credentials" });
@@ -72,7 +72,8 @@ async function login(req, res) {
 			return res.status(500).json({ error: "JWT_SECRET missing" });
 		}
 
-		const token = jwt.sign({ user_id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "7d" });
+		const payload = { user_id: user.id, username: user.username, is_admin: !!user.is_admin };
+		const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
 
 		return res.status(200).json({
 			token,
@@ -82,6 +83,7 @@ async function login(req, res) {
 				email: user.email,
 				first_name: user.first_name,
 				last_name: user.last_name,
+				is_admin: !!user.is_admin,
 			},
 		});
 	} catch (err) {
