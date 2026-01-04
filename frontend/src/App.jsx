@@ -5,6 +5,10 @@ import UserHome from "./user/pages/UserHome.jsx";
 import TimerPage from "./user/pages/TimerPage.jsx";
 import TasksPage from "./user/pages/TasksPage.jsx";
 import AdminHome from "./admin/pages/AdminHome.jsx";
+import LoginPage from "./user/pages/LoginPage.jsx";
+import RegisterPage from "./user/pages/RegisterPage.jsx";
+import Header from "./components/Header.jsx";
+import { AuthProvider } from "./lib/AuthProvider";
 import { startSessionOnce, trackEvent } from "./lib/tracking.js";
 import PageViewTracker from "./lib/PageViewTracker.jsx";
 import IdleTracker from "./lib/IdleTracker.jsx";
@@ -67,19 +71,22 @@ export default function App() {
 	}, []);
 
 	return (
-		<BrowserRouter>
-			<PageViewTracker />
-			<IdleTracker idleMs={30000} />
-			<nav style={{ marginBottom: 16 }}>
-				<Link to="/">Home</Link> | <Link to="/timer">Timer</Link> | <Link to="/tasks">Tasks</Link> | <Link to="/admin">Admin</Link>
-			</nav>
+		<AuthProvider>
+			<BrowserRouter>
+				<PageViewTracker />
+				<IdleTracker idleMs={30000} />
 
-			<Routes>
-				<Route path="/" element={<UserHome />} />
-				<Route path="/timer" element={<TimerPage />} />
-				<Route path="/tasks" element={<TasksPage />} />
-				<Route path="/admin" element={<AdminHome />} />
-			</Routes>
-		</BrowserRouter>
+				<Header />
+
+				<Routes>
+					<Route path="/" element={<UserHome />} />
+					<Route path="/timer" element={<TimerPage />} />
+					<Route path="/tasks" element={<TasksPage />} />
+					<Route path="/admin" element={<AdminHome />} />
+					<Route path="/login" element={<LoginPage />} />
+					<Route path="/register" element={<RegisterPage />} />
+				</Routes>
+			</BrowserRouter>
+		</AuthProvider>
 	);
 }
