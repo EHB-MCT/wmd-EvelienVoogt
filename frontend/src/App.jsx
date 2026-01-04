@@ -69,7 +69,6 @@ export default function App() {
 	return (
 		<BrowserRouter>
 			<PageViewTracker />
-			<PageViewTracker />
 			<IdleTracker idleMs={30000} />
 			<nav style={{ marginBottom: 16 }}>
 				<Link to="/">Home</Link> | <Link to="/timer">Timer</Link> | <Link to="/tasks">Tasks</Link> | <Link to="/admin">Admin</Link>

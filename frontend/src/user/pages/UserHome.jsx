@@ -1,188 +1,68 @@
-import React, { useState } from "react";
+import React from "react";
+import { Link } from "react-router-dom";
 import { trackEvent, msSinceSessionStart } from "../../lib/tracking.js";
 
 export default function UserHome() {
-	const [taskTitle, setTaskTitle] = useState("");
-	const [tasks, setTasks] = useState([]);
-	const [editingTaskId, setEditingTaskId] = useState(null);
-	const [editValue, setEditValue] = useState("");
+  const onCtaClick = async (cta) => {
+    // msSinceSessionStart is set when startSessionOnce() runs in App.jsx
+    // (so this will be non-null once session is started)
+    const ms = msSinceSessionStart();
 
-	const startEditing = (task) => {
-		setEditingTaskId(task.id);
-		setEditValue(task.title);
-	};
-	// --- TIMER EVENTS ---
-	const onStartFocus = async () => {
-		try {
-			await trackEvent({
-				type: "timer_start",
-				path: window.location.pathname,
-				element: "start-focus-button",
-				metadata: {
-					ms_since_session_start: msSinceSessionStart(),
-				},
-			});
-			console.log("timer_start sent");
-		} catch (e) {
-			console.error("timer_start failed", e);
-		}
-	};
+    await trackEvent({
+      type: "cta_click",
+      path: window.location.pathname,
+      element: `cta-${cta}`,
+      metadata: {
+        ms_since_session_start: ms,
+      },
+    });
+  };
 
-	const onCompleteFocus = async () => {
-		try {
-			await trackEvent({
-				type: "timer_complete",
-				path: window.location.pathname,
-				element: "complete-focus-button",
-			});
-			console.log("timer_complete sent");
-		} catch (e) {
-			console.error("timer_complete failed", e);
-		}
-	};
+  return (
+    <div style={{ padding: 24, maxWidth: 720, margin: "0 auto" }}>
+      <header style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: 0 }}>FocusFlow</h1>
+        <p style={{ marginTop: 8, fontSize: 16, lineHeight: 1.5 }}>
+          Focus in korte blokken. Houd je taken simpel. En laat je sessie-data je subtiel helpen.
+        </p>
+        <p style={{ marginTop: 6 }}>
+          <small>Maak een profiel voor gepersonaliseerde ervaringen.</small>
+        </p>
+      </header>
 
-	const onInterruptFocus = async () => {
-		try {
-			await trackEvent({
-				type: "timer_interrupt",
-				path: window.location.pathname,
-				element: "interrupt-focus-button",
-			});
-			console.log("timer_interrupt sent");
-		} catch (e) {
-			console.error("timer_interrupt failed", e);
-		}
-	};
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Link to="/timer" style={{ textDecoration: "none" }}>
+          <button
+            onClick={() => onCtaClick("start-focus").catch(console.error)}
+            title="Ga naar de timer"
+          >
+            Start focussen
+          </button>
+        </Link>
 
-	// --- TASK CREATE ---
-	const onCreateTask = async (e) => {
-		e.preventDefault();
+        <Link to="/tasks" style={{ textDecoration: "none" }}>
+          <button
+            onClick={() => onCtaClick("tasks").catch(console.error)}
+            title="Ga naar je taken"
+          >
+            Naar taken
+          </button>
+        </Link>
 
-		const title = taskTitle.trim();
-		if (!title) return;
+        {/* Placeholder – later auth */}
+        <button disabled title="Komt later">
+          Inloggen / registreren
+        </button>
+      </div>
 
-		const id = crypto.randomUUID();
-		const createdAt = Date.now();
-
-		setTasks((prev) => [{ id, title, done: false, createdAt }, ...prev]);
-		setTaskTitle("");
-
-		try {
-			await trackEvent({
-				type: "task_create",
-				path: window.location.pathname,
-				element: "task-create-form",
-				value: title,
-				metadata: {
-					task_id: id,
-					ms_since_session_start: msSinceSessionStart(),
-				},
-			});
-			console.log("task_create sent", { task_id: id });
-		} catch (e) {
-			console.error("task_create failed", e);
-		}
-	};
-
-	// --- TASK TOGGLE ---
-	const toggleTask = async (task) => {
-		const newDone = !task.done;
-
-		setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: newDone } : t)));
-
-		try {
-			await trackEvent({
-				type: "task_complete",
-				path: window.location.pathname,
-				element: "task-toggle",
-				metadata: { task_id: task.id, done: newDone },
-			});
-			console.log("task_complete sent", {
-				task_id: task.id,
-				done: newDone,
-			});
-		} catch (e) {
-			console.error("task_complete failed", e);
-		}
-	};
-
-	// --- TASK DELETE ---
-	const deleteTask = async (task) => {
-		setTasks((prev) => prev.filter((t) => t.id !== task.id));
-
-		try {
-			await trackEvent({
-				type: "task_delete",
-				path: window.location.pathname,
-				element: "task-delete",
-				metadata: { task_id: task.id },
-			});
-			console.log("task_delete sent", { task_id: task.id });
-		} catch (e) {
-			console.error("task_delete failed", e);
-		}
-	};
-
-	// --- TASK EDIT ---
-	const saveEdit = async (task) => {
-		const newTitle = editValue.trim();
-
-		if (!newTitle) return;
-		setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, title: newTitle } : t)));
-		setEditingTaskId(null);
-		try {
-			await trackEvent({
-				type: "task_edit",
-				path: window.location.pathname,
-				element: "task-title",
-				value: newTitle,
-				metadata: { task_id: task.id },
-			});
-			console.log("task_edit sent", { task_id: task.id });
-		} catch (e) {
-			console.error("task_edit failed", e);
-		}
-	};
-	return (
-		<div>
-			<h2>User app</h2>
-
-			<div style={{ marginBottom: 16 }}>
-				<button onClick={onStartFocus}>Start focus</button> <button onClick={onCompleteFocus}>Complete focus</button> <button onClick={onInterruptFocus}>Stop</button>
-			</div>
-
-			<hr />
-
-			<h3>Tasks</h3>
-
-			<form onSubmit={onCreateTask} style={{ marginBottom: 12 }}>
-				<input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder="New task..." /> <button type="submit">Add</button>
-			</form>
-
-			<ul>
-				{tasks.map((t) => (
-					<li key={t.id}>
-						<button onClick={() => toggleTask(t)}>{t.done ? "Undo" : "Done"}</button>{" "}
-						{editingTaskId === t.id ? (
-							<input
-								value={editValue}
-								onChange={(e) => setEditValue(e.target.value)}
-								autoFocus
-								onBlur={() => saveEdit(t)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") saveEdit(t);
-									if (e.key === "Escape") setEditingTaskId(null);
-								}}
-							/>
-						) : (
-							<span onClick={() => startEditing(t)} style={{ cursor: "pointer", userSelect: "none" }} title="Click to edit">
-								{t.done ? <s>{t.title}</s> : t.title}
-							</span>
-						)}{" "}
-						<button onClick={() => deleteTask(t)}>Delete</button>
-					</li>
-				))}
-			</ul>
-		</div>
-	);
+      <section style={{ marginTop: 24 }}>
+        <h3 style={{ marginBottom: 8 }}>Hoe werkt het?</h3>
+        <ul style={{ marginTop: 0, lineHeight: 1.6 }}>
+          <li>Start een focussessie in de timer.</li>
+          <li>Hou je takenlijst bij voor overzicht.</li>
+            <li>FocusFlow helpt je focussen met subtiele aanpassingen op basis van je sessiegedrag.</li>
+        </ul>
+      </section>
+    </div>
+  );
 }
