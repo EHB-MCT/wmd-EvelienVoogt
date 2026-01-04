@@ -1,0 +1,19 @@
+This project uses:
+- Node.js + Express
+- PostgreSQL
+- Knex.js for database access
+- React for the frontend (user-facing and admin interface)
+- Docker Compose for local runtime
+
+Rules:
+- Do not introduce new frameworks or databases
+- Do not replace React with another frontend framework
+- Follow the existing folder structure
+- Prefer simple, explicit code over abstractions
+- No cloud services or external APIs
+- Assume all services run locally via docker-compose
+
+All database changes go through Knex migrations.
+All routes must be registered explicitly.
+The frontend contains a user-facing interface and an admin interface,
+separated by routing and folder structure within the same React application.
